@@ -39,6 +39,10 @@ class TestGraph(unittest.TestCase):
 		self.G.removeEdge(1, 0)
 		self.assertNotEqual(self.G.getVertex(0).getAdjacentVertices(), {1: 'D'})
 		self.assertEqual(self.G.getVertex(1).getAdjacentVertices(), {})
+		
+class TestEdge(unittest.TestCase):
+	
+	pass
 				
 	
 		
