@@ -12,17 +12,19 @@ class Vertex:
 	# Return the element coloring of the vertex
 	def getElement(self):
 		return self.element
-	
-	# Add the indentifying position of an adjacent vertex
-	# and the weight of the bond between them (S, D, or T)
-	def addAdjacent(self, otherPosition, weight='S'):
-		self.adjacent[otherPosition] = weight
 
 	# Return the positions of each of the adjacent vertices in the Graph
 	def getAdjacentVertices(self):
 		return self.adjacent
 		
-
+# A single Edge of Graph which includes the weight of the chemical element
+class Edge:
+	def __init__(self, origin, destination, weight):
+		self.origin = origin
+		self.destination = destination
+		self.weight = weight
+		
+	
 
 # A Graph object which maintains a dictionary of Vertex objects		
 class Graph:
