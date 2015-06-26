@@ -1,10 +1,10 @@
-import GraphADT
+import graphADT
 import unittest
 
 class TestVertex(unittest.TestCase):
 	
 	def setUp(self):
-		self.x = GraphADT.Vertex(1, 'C')
+		self.x = graphADT.Vertex(1, 'C')
 		
 	def testVertexCreation(self):
 		self.assertEqual(self.x.getPosition(), 1)
@@ -17,17 +17,17 @@ class TestVertex(unittest.TestCase):
 class TestGraph(unittest.TestCase):
 	
 	def setUp(self):
-		self.G = GraphADT.Graph()
-		self.G.addVertex('Carbon', 0)
-		self.G.addVertex('Nitrogen', 1)
-		self.G.addEdge(0, 1, 'D')
+		self.G = graphADT.Graph()
+		self.G.add_vertex('Carbon', 0)
+		self.G.add_vertex('Nitrogen', 1)
+		self.G.add_edge(0, 1, 'D')
 		
 	def testAddVertex(self):
-		self.assertEqual(self.G.getVertex(0).getElement(), 'Carbon')
-		self.assertEqual(self.G.getVertex(1).getElement(), 'Nitrogen')
+		self.assertEqual(self.G.getVertex(0).element(), 'Carbon')
+		self.assertEqual(self.G.getVertex(1).element(), 'Nitrogen')
 	
 	def testRemoveVertex(self):
-		self.G.removeVertex(0)
+		self.G.remove_vertex(0)
 		self.assertIsNone(self.G.getVertex(0))
 		
 	def testAddEdge(self):
@@ -36,7 +36,7 @@ class TestGraph(unittest.TestCase):
 		self.assertNotEqual(self.G.getVertex(1).getAdjacentVertices(), {})
 		
 	def testRemoveEdge(self):
-		self.G.removeEdge(1, 0)
+		self.G.remove_edge(1, 0)
 		self.assertNotEqual(self.G.getVertex(0).getAdjacentVertices(), {1: 'D'})
 		self.assertEqual(self.G.getVertex(1).getAdjacentVertices(), {})
 		
