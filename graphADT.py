@@ -1,10 +1,11 @@
 # A single Vertex of Graph which includes its chemical element and a dictionary of adjacent vertices
 class Vertex:
-    def __init__(self, element, isotope, hydrogen, charge):
+    def __init__(self, element, isotope, hydrogen, charge, aromatic):
         self._element = element
         self._isotope = isotope
         self._hydrogen = hydrogen
         self._charge = charge
+        self._aromatic = aromatic
 
     # Return the element coloring of the vertex
     @property
@@ -25,6 +26,11 @@ class Vertex:
     @property
     def charge(self):
         return self._charge
+
+    # Return if the element is aromatic
+    @property
+    def artomatic(self):
+        return self._aromatic
 
     # Create a hash of the vertex object so it can be used as a key
     def __hash__(self):
@@ -98,7 +104,7 @@ class Graph:
         self._vertex_count = 0
 
     # Creates a new vertex object and assigns it a dictionary which will contain all adjacent vertices and edges
-    def add_vertex(self, element, isotope='natural', hydrogen='lowestValence', charge='neutral'):
+    def add_vertex(self, element, isotope='natural', hydrogen='lowestValence', charge='neutral', aromatic=False):
         new_vertex = Vertex(element, isotope, hydrogen, charge)
         self._vertices[new_vertex] = {}
         self._vertex_count = + 1
