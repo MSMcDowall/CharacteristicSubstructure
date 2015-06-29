@@ -70,7 +70,7 @@ class Edge:
 
 # A Graph object which maintains a dictionary of Vertex objects		
 class Graph:
-    def __init__(self):
+    def __init__(self, string):
         # Dictionary of vertices that have been added to the Graph which maps them to their adjacent vertices
         self._vertices = {}
         # Stores the elements whose bonds have been broken within a ring
@@ -78,6 +78,8 @@ class Graph:
         self._breakpoints = {}
         # The number of vertices within the graph
         self._vertex_count = 0
+        # The original SMILES string
+        self._SMILES_string = string
 
     # Returns all the vertices in the graph
     @property
@@ -96,6 +98,11 @@ class Graph:
     @property
     def size(self):
         return len(self._vertices)
+        
+	# Return the original SMILES string
+	@property
+	def SMILES_string(self):
+		return self._SMILES_string
 
     # Clears the graph
     def clear(self):
@@ -104,8 +111,8 @@ class Graph:
         self._vertex_count = 0
 
     # Creates a new vertex object and assigns it a dictionary which will contain all adjacent vertices and edges
-    def add_vertex(self, element, isotope='natural', hydrogen='lowestValence', charge='neutral', aromatic=False):
-        new_vertex = Vertex(element, isotope, hydrogen, charge)
+    def add_vertex(self, element, isotope=False, hydrogen=False, charge=False, aromatic=False):
+        new_vertex = Vertex(element, isotope, hydrogen, charge, aromatic)
         self._vertices[new_vertex] = {}
         self._vertex_count = + 1
         return new_vertex
@@ -118,7 +125,7 @@ class Graph:
             del self._vertices[vertex]
 
     # Add a weighted edge between the vertices at the two given positions
-    def add_edge(self, first_vertex, second_vertex, weight='S'):
+    def add_edge(self, first_vertex, second_vertex, weight=1):
         if first_vertex in self._vertices and second_vertex in self._vertices:
             newEdge = Edge(first_vertex, second_vertex, weight)
             self._vertices[first_vertex][second_vertex] = newEdge
