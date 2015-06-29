@@ -1,12 +1,10 @@
-import graphADT
-import tokenizer
-import parser
+import graph
 import unittest
 
 class TestVertex(unittest.TestCase):
 	
 	def setUp(self):
-		self.x = graphADT.Vertex('C', False, False, False, False)
+		self.x = graph.Vertex('C', False, False, False, False)
 		
 	def testVertexCreation(self):
 		self.assertEqual(self.x.element, 'C')
@@ -19,9 +17,9 @@ class TestVertex(unittest.TestCase):
 class TestEdge(unittest.TestCase):
 	
 	def setUp(self):
-		self.x = graphADT.Vertex('C', False, False, False, False)
-		self.y = graphADT.Vertex('He', False, 2, False, False)
-		self.e = graphADT.Edge(self.x, self.y, 1)
+		self.x = graph.Vertex('C', False, False, False, False)
+		self.y = graph.Vertex('He', False, 2, False, False)
+		self.e = graph.Edge(self.x, self.y, 1)
 		
 	def test_edge_creation(self):
 		self.assertEqual(self.e.weight, 1)
@@ -36,7 +34,7 @@ class TestEdge(unittest.TestCase):
 class TestGraph(unittest.TestCase):
 	
 	def setUp(self):
-		self.g = graphADT.Graph('C=N')
+		self.g = graph.Graph('C=N')
 		self.x = self.g.add_vertex('C')
 		self.y = self.g.add_vertex('N', hydrogen=2)
 		self.e = self.g.add_edge(self.x, self.y, 2)
