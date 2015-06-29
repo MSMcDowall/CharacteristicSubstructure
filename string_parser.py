@@ -9,7 +9,7 @@ _break_points = {}
 #_branch_root = #stack
 
 # Read in string from file
-_tokens = tokenizer.tokenize_SMILES(SMILES_string)
+_tokens = tokenizer.tokenize_smiles(SMILES_string)
 _graph = molecule.Molecule(SMILES_string)
 
 
