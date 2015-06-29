@@ -22,3 +22,8 @@ def tokenize_smiles(molecule_string):
 
 string = 'C12CN=[12C]He1C(c)Oo'
 print tokenize_smiles(string)
+myface = None
+if myface:
+    print "happy days"
+else:
+    print "sad days"
