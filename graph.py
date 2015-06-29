@@ -25,6 +25,7 @@ class Edge(object):
     def endpoints(self):
         return (self._origin, self._destination)
 
+    # Return the element of the edge
     @property
     def element(self):
         return self._element
@@ -74,7 +75,7 @@ class Graph(object):
         self._vertices = {}
         self._vertex_count = 0
 
-    # Creates a new vertex object and assigns it a dictionary which will contain all adjacent vertices and edge
+    # Creates a new vertex object and assigns it a dictionary which will contain all adjacent vertices and edges
     # Method is split in two to aid in the inheritance of this method
     def add_vertex(self, element):
         new_vertex = Vertex(element)
