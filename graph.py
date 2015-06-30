@@ -109,7 +109,6 @@ class Graph(object):
         del self._vertices[first_vertex][second_vertex]
         del self._vertices[second_vertex][first_vertex]
 
-
     # Returns all the vertices which are adjacent to the vertex
     def neighbours(self, vertex):
         return self._vertices[vertex].keys()

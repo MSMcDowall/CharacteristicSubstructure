@@ -6,7 +6,7 @@ class TestVertex(unittest.TestCase):
 	def setUp(self):
 		self.x = graph.Vertex('C')
 
-	def testVertexCreation(self):
+	def test_vertex_creation(self):
 		self.assertEqual(self.x.element, 'C')
 
 
@@ -56,26 +56,20 @@ class TestGraph(unittest.TestCase):
 		self.g.remove_edge(self.x, self.y)
 		self.assertEqual(self.g._vertices[self.x], {})
 
-	def test_neighbours(self):
-		pass
-
 	def test_connecting_edges(self):
-		pass
+		self.assertEqual(self.g.connecting_edges(self.y), [self.e])
 
 	def test_degree(self):
-		pass
+		self.assertEqual(self.g.degree(self.x), 1)
+		self.z = self.g.add_vertex('O')
+		self.g.add_edge(self.x, self.z)
+		self.assertEqual(self.g.degree(self.x), 2)
 
 	def test_contains_edge(self):
-		pass
-
-
-class TestTokenizer(unittest.TestCase):
-	pass
-
-
-class TestParser(unittest.TestCase):
-	pass
-
+		self.z = self.g.add_vertex('O')
+		self.g.add_edge(self.x, self.z)
+		self.assertTrue(self.g.contains_edge(self.x, self.z))
+		self.assertFalse(self.g.contains_edge(self.y, self.z))
 
 def main():
 	unittest.main()
