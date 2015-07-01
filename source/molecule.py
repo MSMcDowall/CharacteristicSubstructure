@@ -56,19 +56,19 @@ class Molecule(graph.Graph):
     def __init__(self, string):
         graph.Graph.__init__(self)
         # The original SMILES string
-        self._SMILES_string = string
+        self._smiles_string = string
 
     # Return the original SMILES string
     @property
-    def SMILES_string(self):
-        return self._SMILES_string
+    def smiles_string(self):
+        return self._smiles_string
 
-    def add_atom(self, element, isotope=False, hydrogen=False, charge=False):
+    def add_atom(self, element, isotope=None, hydrogen=None, charge=None):
         new_atom = Atom(element, isotope, hydrogen, charge)
         graph.Graph.vertex_to_graph(self, new_atom)
         return new_atom
 
-    def add_aromatic_atom(self, element, isotope=False, hydrogen=False, charge=False):
+    def add_aromatic_atom(self, element, isotope=None, hydrogen=None, charge=None):
         new_aromatic_atom = AromaticAtom(element, isotope, hydrogen, charge)
         graph.Graph.vertex_to_graph(self, new_aromatic_atom)
         return new_aromatic_atom
