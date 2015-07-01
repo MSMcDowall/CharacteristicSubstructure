@@ -1,8 +1,29 @@
 import re
 import molecule
 
-def square_atom(scanner, token):
-    return token
+def square_atom(token, molecule_object):
+    mole = molecule_object
+    d = token.groupdict()
+    isotope = None
+    hcount = None
+    charge = None
+    if d['isotope']:
+        isotope = d['isotope']
+    element = d['element']
+    if d['hydrogen']:
+        hcount = 1
+    if d['hcount']:
+        hcount = d['hcount']
+    if d['charge']:
+        charge = d['charge']
+    elif d['posdouble']:
+        charge = '+2'
+    elif d['negdouble']:
+        charge = '-2'
+    if d['aromatic']:
+        mole.add_aromatic_atom(element, isotope, hcount, charge)
+    else:
+        mole.add_atom(element, isotope, hcount, charge)
 
 def organic(scanner, token):
     return token
@@ -24,13 +45,14 @@ smiles_pattern = re.compile(r"""((?P<square_atom>
                                   (?P<isotope>\d+)?
                                   (?P<element>[A-Z][a-z]?
                                         |(?P<aromatic>b|c|n|o|p|s|se|as))
-                                  (?P<chiral>@|@@)
-                                  (?P<hydrogen>[H])?
-                                  (?P<hcount>\d+)?
-                                  (?P<charge>[+]|[-])?
-                                  (?P<chargecount>\d+)?
-                                  (?P<posdouble>[+][+])?
-                                  (?P<negdouble>[-][-])?
+                                  (?P<chiral>@+)
+                                  ((?P<hydrogen>[H])?
+                                  (?P<hcount>\d+)?)
+                                  (((?P<charge>[+]|[-])?
+                                  (?P<chargecount>\d+)?)|
+                                  (?P<posdouble>[+][+])?|
+                                  (?P<negdouble>[-][-])?)
+                                  (?P<class>\d+)?
                                   (?P<close_bracket>\]))
                             |(?P<organic>B|C|N|O|S|P|F|Cl|Br|I|
                                 (?P<oaromatic>b|c|n|o|s|p))
@@ -38,16 +60,18 @@ smiles_pattern = re.compile(r"""((?P<square_atom>
                             |(?P<ring>\d)
                             |(?P<branch_start>\()
                             |(?P<branch_end>\))
-                            |(?P<break>\.))""", re.X)
-smiles = '[12bH2+2]CN=C.O(CF)'
+                            |(?P<break>\.))
+                            |(?P<cis_trans>\\|/)""", re.X)
+
+smiles = 'C[12bH2+2]CN=C.O(CF)'
 tokens = re.finditer(smiles_pattern, smiles)
-molecule = molecule.Molecule(smiles)
+mol = molecule.Molecule(smiles)
 for a in tokens:
     d = a.groupdict()
     if d['square_atom']:
+        square_atom(a, mol)
+        print mol.vertices
         print 'This is a square bracket'
-        if d['aromatic']:
-            print 'This is aromatic'
     elif d['organic']:
         print 'This is organic'
     elif d['bond']:
