@@ -1,6 +1,5 @@
 import re
 
-
 def tokenize_smiles(molecule_string):
     # Regular expressions to break the SMILES strings component parts
     separate_symbols = re.compile('([-=#\$:/\\ \(\).\[\]]|[A-Za-z][a-z]?|[0-9])')
@@ -19,3 +18,4 @@ def tokenize_smiles(molecule_string):
         else:
             tokens.append(token)
     return tokens
+

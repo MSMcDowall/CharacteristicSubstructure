@@ -1,6 +1,6 @@
-import molecule
-import tokenizer
 import re
+
+from source import molecule, tokenizer
 
 smiles_string = ''
 molecule_graph = molecule.Molecule(smiles_string)
