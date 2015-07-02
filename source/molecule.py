@@ -33,20 +33,25 @@ class Atom(graph.Vertex):
     def ring_break(self, boolean):
         self._ring_break = boolean
 
+    def __str__(self):
+        return 'Atom with element %s' % self.element
+
 
 class AromaticAtom(Atom):
     def __init__(self, element, isotope=None, hydrogen=None, charge=None):
         Atom.__init__(self, element, isotope, hydrogen, charge)
 
-        # Any methods particular to atoms in aromatic ring
+    def __str__(self):
+        return 'Aromatic element with element %s' % self.element
 
 
 class SingleBond(graph.Edge):
     def __init__(self, origin, destination):
         graph.Edge.__init__(self, origin, destination)
 
-        # Any methods particular to single bonds
-
+    def __str__(self):
+        # return 'Single bond joining (%s) and (%s)' % (self._origin, self._destination)
+        pass
 
 class DoubleBond(graph.Edge):
     def __init__(self, origin, destination):

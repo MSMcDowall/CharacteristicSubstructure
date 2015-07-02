@@ -1,11 +1,6 @@
 import re
 import molecule
 
-_previous_atom = None
-_break_points = {}      # Uses the number of the break point as a key and the vertex
-_branch_root = []       # Used as stack with the append() and pop() methods
-_previous_bond = None  # Change to weight of bond if the previous token is a bond
-
 smiles_string_pattern = re.compile(r"""(?P<square_atom>
                                             (?P<open_bracket>\[)
                                                 (?P<isotope>\d+)?
@@ -33,6 +28,10 @@ smiles_string_pattern = re.compile(r"""(?P<square_atom>
                                         |(?P<dot>\.)
                                         |(?P<cis_trans>\\|/)
                                     """, re.VERBOSE)
+_previous_atom = None
+_break_points = {}      # Uses the number of the break point as a key and the vertex
+_branch_root = []       # Used as stack with the append() and pop() methods
+_previous_bond = None  # Change to weight of bond if the previous token is a bond
 
 def square_atom(token, mole):
     global _previous_atom
@@ -62,11 +61,11 @@ def organic(token, mole):
     global _previous_atom
     d = token.groupdict()
     if d['oaromatic']:
-        atom = mole.add_aromatic_atom(d['element'])
+        atom = mole.add_aromatic_atom(d['organic'])
         if _previous_atom:
             mole.add_aromatic_bond(_previous_atom, atom)
     else:
-        atom = mole.add_atom(d['element'])
+        atom = mole.add_atom(d['organic'])
         add_bond(atom, mole)
     _previous_atom = atom
 
@@ -91,17 +90,17 @@ def add_bond(atom, mole):
 def ring(token, mole):
     global _break_points, _previous_atom, _previous_bond
     _previous_atom.ring_break(True)
-    if token not in _break_points.keys():       # The number has not been encountered yet
+    if token not in _break_points.keys():           # The number has not been encountered yet (open ring)
         _break_points['token'] = [_previous_atom, _previous_bond]
-    elif token in _break_points:
+    elif token in _break_points:                    # The number has been encountered before (close ring)
         ring_atom = _break_points['token'][0]
         ring_bond = _break_points['token'][1]
-        if not ring_bond and not _previous_bond:
+        if not ring_bond and not _previous_bond:    # No bond symbol has been specified
             mole.add_single_bond(_previous_atom, ring_atom)
-        elif ring_bond:
+        elif ring_bond:                             # A bond symbol was specified at the ring opening
             _previous_bond = ring_bond
             add_bond(ring_bond, mole)
-        elif _previous_bond:
+        elif _previous_bond:                        # A bond symbol was specified at the ring closing
             add_bond(ring_bond,mole)
 
 def branch_start():
@@ -115,8 +114,6 @@ def branch_end():
 def bond(token):
     global _previous_bond
     _previous_bond = token
-    d = token.groupdict()
-
 
 def dot():
     global _previous_atom
@@ -126,7 +123,6 @@ def parse_smiles(smiles):
     tokens = re.finditer(smiles_string_pattern, smiles)
     mol = molecule.Molecule(smiles)
     for a in tokens:
-        print a
         d = a.groupdict()
         if d['organic']:
             organic(a, mol)
@@ -144,8 +140,9 @@ def parse_smiles(smiles):
             dot()
     return mol
 
-mol = parse_smiles('C[12bH2+2]CN=C.O(CF)')
-print mol.vertices
-print mol.edges
-print mol.size
-print mol.smiles_string
+mol = parse_smiles('CC')
+for m in mol.vertices:
+    print m
+
+for e in mol.edges:
+    print e
