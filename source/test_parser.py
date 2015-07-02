@@ -1,19 +1,48 @@
 import re
 import molecule
 
-def square_atom(token, molecule_object):
-    mole = molecule_object
+_previous_atom = None
+_break_points = {}      # Uses the number of the break point as a key and the vertex
+_branch_root = []       # Used as stack with the append() and pop() methods
+_previous_bond = None  # Change to weight of bond if the previous token is a bond
+
+smiles_string_pattern = re.compile(r"""(?P<square_atom>
+                                            (?P<open_bracket>\[)
+                                                (?P<isotope>\d+)?
+                                                (?P<element>[A-Z][a-z]?
+                                                    |(?P<aromatic>b|c|n|o|p|s|se|as))
+                                                (?P<chiral>@|@@)?
+                                                (?P<hydrogen>[H])?
+                                                (?P<hcount>\d+)?
+                                                (?P<charge>[+]|[-])?
+                                                (?P<chargecount>\d+)?
+                                                (?P<posdouble>[+][+])?
+                                                (?P<negdouble>[-][-])?
+                                            (?P<close_bracket>\]))
+                                        |(?P<organic>B|C|N|O|S|P|F|Cl|Br|I
+                                            |(?P<oaromatic>b|c|n|o|s|p))
+                                        |(?P<bond>
+                                            (?P<single>-)|
+                                            (?P<double>=)|
+                                            (?P<triple>\#)|
+                                            (?P<quadruple>$)|
+                                            (?P<arom_bond>:))
+                                        |(?P<ring>\d)
+                                        |(?P<branch_start>\()
+                                        |(?P<branch_end>\))
+                                        |(?P<dot>\.)
+                                        |(?P<cis_trans>\\|/)
+                                    """, re.VERBOSE)
+
+def square_atom(token, mole):
+    global _previous_atom
     d = token.groupdict()
-    isotope = None
     hcount = None
     charge = None
-    if d['isotope']:
-        isotope = d['isotope']
-    element = d['element']
     if d['hydrogen']:
         hcount = 1
-    if d['hcount']:
-        hcount = d['hcount']
+        if d['hcount']:
+            hcount = d['hcount']
     if d['charge']:
         charge = d['charge']
     elif d['posdouble']:
@@ -21,66 +50,102 @@ def square_atom(token, molecule_object):
     elif d['negdouble']:
         charge = '-2'
     if d['aromatic']:
-        mole.add_aromatic_atom(element, isotope, hcount, charge)
+        atom = mole.add_aromatic_atom(d['element'], d['isotope'], hcount, charge)
+        if _previous_atom:
+            mole.add_aromatic_bond(_previous_atom, atom)
     else:
-        mole.add_atom(element, isotope, hcount, charge)
+        atom = mole.add_atom(d['element'], d['isotope'], hcount, charge)
+        add_bond(atom, mole)
+    _previous_atom = atom
 
-def organic(scanner, token):
-    return token
+def organic(token, mole):
+    global _previous_atom
+    d = token.groupdict()
+    if d['oaromatic']:
+        atom = mole.add_aromatic_atom(d['element'])
+        if _previous_atom:
+            mole.add_aromatic_bond(_previous_atom, atom)
+    else:
+        atom = mole.add_atom(d['element'])
+        add_bond(atom, mole)
+    _previous_atom = atom
 
-def ring(scanner, token):
-    return token
+def add_bond(atom, mole):
+    global _previous_bond
+    if _previous_atom and not _previous_bond:
+        mole.add_single_bond(_previous_atom, atom)
+    if _previous_atom and _previous_bond:
+        d = _previous_bond.groupdict()
+        if d['single']:
+            mole.add_single_bond(_previous_atom, atom)
+        if d['double']:
+            mole.add_double_bond(_previous_atom, atom)
+        if d['triple']:
+            mole.add_triple_bond(_previous_atom, atom)
+        if d['quadruple']:
+            mole.add_quadruple_bond(_previous_atom, atom)
+        if d['arom_bond']:
+            mole.add_aromatic_bond(_previous_atom, atom)
+        _previous_bond = None
 
-def branch_start(scanner, token):
-    return token
+def ring(token, mole):
+    global _break_points, _previous_atom, _previous_bond
+    _previous_atom.ring_break(True)
+    if token not in _break_points.keys():       # The number has not been encountered yet
+        _break_points['token'] = [_previous_atom, _previous_bond]
+    elif token in _break_points:
+        ring_atom = _break_points['token'][0]
+        ring_bond = _break_points['token'][1]
+        if not ring_bond and not _previous_bond:
+            mole.add_single_bond(_previous_atom, ring_atom)
+        elif ring_bond:
+            _previous_bond = ring_bond
+            add_bond(ring_bond, mole)
+        elif _previous_bond:
+            add_bond(ring_bond,mole)
 
-def branch_end(scanner, token):
-    return token
+def branch_start():
+    global _branch_root
+    _branch_root.append(_previous_atom)
 
-def bond(scanner, token):
-    return token
+def branch_end():
+    global _previous_atom, _branch_root
+    _previous_atom = _branch_root.pop()
 
-smiles_pattern = re.compile(r"""((?P<square_atom>
-                                  (?P<open_bracket>\[)
-                                  (?P<isotope>\d+)?
-                                  (?P<element>[A-Z][a-z]?
-                                        |(?P<aromatic>b|c|n|o|p|s|se|as))
-                                  (?P<chiral>@+)
-                                  ((?P<hydrogen>[H])?
-                                  (?P<hcount>\d+)?)
-                                  (((?P<charge>[+]|[-])?
-                                  (?P<chargecount>\d+)?)|
-                                  (?P<posdouble>[+][+])?|
-                                  (?P<negdouble>[-][-])?)
-                                  (?P<class>\d+)?
-                                  (?P<close_bracket>\]))
-                            |(?P<organic>B|C|N|O|S|P|F|Cl|Br|I|
-                                (?P<oaromatic>b|c|n|o|s|p))
-                            |(?P<bond>[-=#$:])
-                            |(?P<ring>\d)
-                            |(?P<branch_start>\()
-                            |(?P<branch_end>\))
-                            |(?P<break>\.))
-                            |(?P<cis_trans>\\|/)""", re.X)
+def bond(token):
+    global _previous_bond
+    _previous_bond = token
+    d = token.groupdict()
 
-smiles = 'C[12bH2+2]CN=C.O(CF)'
-tokens = re.finditer(smiles_pattern, smiles)
-mol = molecule.Molecule(smiles)
-for a in tokens:
-    d = a.groupdict()
-    if d['square_atom']:
-        square_atom(a, mol)
-        print mol.vertices
-        print 'This is a square bracket'
-    elif d['organic']:
-        print 'This is organic'
-    elif d['bond']:
-        print 'This is a bond'
-    elif d['ring']:
-        print 'This is a ring'
-    elif d['branch_start']:
-        print 'This it the branch start'
-    elif d['branch_end']:
-        print 'This is the branch end'
-    elif d['break']:
-        print 'This is a break'
+
+def dot():
+    global _previous_atom
+    _previous_atom = None
+
+def parse_smiles(smiles):
+    tokens = re.finditer(smiles_string_pattern, smiles)
+    mol = molecule.Molecule(smiles)
+    for a in tokens:
+        print a
+        d = a.groupdict()
+        if d['organic']:
+            organic(a, mol)
+        elif d['square_atom']:
+            square_atom(a, mol)
+        elif d['bond']:
+            bond(a)
+        elif d['ring']:
+            ring(a, mol)
+        elif d['branch_start']:
+            branch_start()
+        elif d['branch_end']:
+            branch_end()
+        elif d['dot']:
+            dot()
+    return mol
+
+mol = parse_smiles('C[12bH2+2]CN=C.O(CF)')
+print mol.vertices
+print mol.edges
+print mol.size
+print mol.smiles_string

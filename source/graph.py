@@ -47,10 +47,8 @@ class Edge(object):
 # A Graph object which maintains a dictionary of Vertex objects		
 class Graph(object):
     def __init__(self):
-        # Dictionary of vertices that have been added to the Graph which maps them to their adjacent vertices
-        self._vertices = {}
-        # The number of vertices within the graph
-        self._vertex_count = 0
+        self._vertices = {}         # Dictionary of vertices and maps them to their adjacent vertices
+        self._vertex_count = 0      # The number of vertices within the graph
 
     # Returns all the vertices in the graph
     @property

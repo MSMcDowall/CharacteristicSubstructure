@@ -2,11 +2,12 @@ import graph
 
 
 class Atom(graph.Vertex):
-    def __init__(self, element, isotope, hydrogen, charge):
+    def __init__(self, element, isotope=None, hydrogen=None, charge=None, ring_break=False):
         graph.Vertex.__init__(self, element)
         self._isotope = isotope
         self._hydrogen = hydrogen
         self._charge = charge
+        self._ring_break = ring_break
 
     # Return the isotope number of the vertex
     @property
@@ -15,7 +16,7 @@ class Atom(graph.Vertex):
 
     # Return the number of hydrogens attached to the vertex
     @property
-    def hydrogen_count(self):
+    def hydrogen(self):
         return self._hydrogen
 
     # Return the charge of the element
@@ -23,9 +24,18 @@ class Atom(graph.Vertex):
     def charge(self):
         return self._charge
 
+    # Return if atom was the break point of a ring
+    @property
+    def ring_break(self):
+        return self.ring_break
+
+    @ring_break.setter
+    def ring_break(self, boolean):
+        self._ring_break = boolean
+
 
 class AromaticAtom(Atom):
-    def __init__(self, element, isotope, hydrogen, charge):
+    def __init__(self, element, isotope=None, hydrogen=None, charge=None):
         Atom.__init__(self, element, isotope, hydrogen, charge)
 
         # Any methods particular to atoms in aromatic ring
@@ -44,6 +54,19 @@ class DoubleBond(graph.Edge):
 
         # Any methods particular to double bonds
 
+class TripleBond(graph.Edge):
+    def __init__(self, origin, destination):
+        graph.Edge.__init__(origin, destination)
+
+        # Any methods particular to triple bonds
+
+
+class QuadrupleBond(graph.Edge):
+    def __init__(self, origin, destination):
+        graph.Edge.__init__(origin, destination)
+
+        # Any methods particular to quadruple bonds
+
 
 class AromaticBond(graph.Edge):
     def __init__(self, origin, destination):
@@ -55,8 +78,7 @@ class AromaticBond(graph.Edge):
 class Molecule(graph.Graph):
     def __init__(self, string):
         graph.Graph.__init__(self)
-        # The original SMILES string
-        self._smiles_string = string
+        self._smiles_string = string        # The original SMILES string
 
     # Return the original SMILES string
     @property
@@ -82,6 +104,16 @@ class Molecule(graph.Graph):
         new_double = DoubleBond(origin, destination)
         graph.Graph.edge_to_graph(self, origin, destination, new_double)
         return new_double
+
+    def add_triple_bond(self, origin, destination):
+        new_triple = TripleBond(origin, destination)
+        graph.Graph.edge_to_graph(self, origin, destination, new_triple)
+        return new_triple
+
+    def add_quadruple_bond(self, origin, destination):
+        new_quadruple = QuadrupleBond(origin, destination)
+        graph.Graph.edge_to_graph(self, origin, destination, new_quadruple)
+        return new_quadruple
 
     def add_aromatic_bond(self, origin, destination):
         new_aromatic_bond = AromaticAtom(origin, destination)
