@@ -89,7 +89,7 @@ def add_bond(atom, mole):
 
 def ring(token, mole):
     global _break_points, _previous_atom, _previous_bond
-    _previous_atom.ring_break(True)
+    _previous_atom.ring_break = True
     if token not in _break_points.keys():           # The number has not been encountered yet (open ring)
         _break_points['token'] = [_previous_atom, _previous_bond]
     elif token in _break_points:                    # The number has been encountered before (close ring)
@@ -139,10 +139,8 @@ def parse_smiles(smiles):
         elif d['dot']:
             dot()
     return mol
-
-mol = parse_smiles('CC')
+complicated = 'O=C7N2c1ccccc1[C@@]64[C@@H]2[C@@H]3[C@@H](OC/C=C5\[C@@H]3C[C@@H]6N(CC4)C5)C7'
+mol = parse_smiles('')
 for m in mol.vertices:
-    print m
-
-for e in mol.edges:
-    print e
+    print str(m) + ': '
+    print mol.dictionary_string(m)

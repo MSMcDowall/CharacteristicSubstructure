@@ -43,6 +43,9 @@ class Edge(object):
     def __hash__(self):
         return hash((self._origin, self._destination))
 
+    def __str__(self):
+        return 'join %s and %s' % (self._origin, self._destination)
+
 
 # A Graph object which maintains a dictionary of Vertex objects		
 class Graph(object):
@@ -107,6 +110,12 @@ class Graph(object):
         del self._vertices[first_vertex][second_vertex]
         del self._vertices[second_vertex][first_vertex]
 
+    def dictionary_string(self, vertex):
+        dictionary_string = {}
+        for key, value in self._vertices[vertex].iteritems():
+            dictionary_string[str(key)] = str(value)
+        return dictionary_string
+
     # Returns all the vertices which are adjacent to the vertex
     def neighbours(self, vertex):
         return self._vertices[vertex].keys()
@@ -122,6 +131,6 @@ class Graph(object):
     # Tests if there is an edge between the two vertices
     def contains_edge(self, first_vertex, second_vertex):
         if second_vertex in self._vertices[first_vertex]:
-            return True
+            return self._vertices[first_vertex][second_vertex]
         else:
             return False

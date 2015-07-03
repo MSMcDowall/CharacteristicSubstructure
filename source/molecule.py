@@ -34,7 +34,7 @@ class Atom(graph.Vertex):
         self._ring_break = boolean
 
     def __str__(self):
-        return 'Atom with element %s' % self.element
+        return 'Atom element %s' % self.element
 
 
 class AromaticAtom(Atom):
@@ -42,7 +42,7 @@ class AromaticAtom(Atom):
         Atom.__init__(self, element, isotope, hydrogen, charge)
 
     def __str__(self):
-        return 'Aromatic element with element %s' % self.element
+        return 'Aromatic element %s' % self.element
 
 
 class SingleBond(graph.Edge):
@@ -50,34 +50,37 @@ class SingleBond(graph.Edge):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        # return 'Single bond joining (%s) and (%s)' % (self._origin, self._destination)
-        pass
+        return 'Single bond ' #+ graph.Edge.__str__(self)
 
 class DoubleBond(graph.Edge):
     def __init__(self, origin, destination):
         graph.Edge.__init__(self, origin, destination)
 
-        # Any methods particular to double bonds
+    def __str__(self):
+        return 'Double bond ' #+ graph.Edge.__str__(self)
 
 class TripleBond(graph.Edge):
     def __init__(self, origin, destination):
         graph.Edge.__init__(origin, destination)
 
-        # Any methods particular to triple bonds
+    def __str__(self):
+        return 'Triple bond ' #+ graph.Edge.__str__(self)
 
 
 class QuadrupleBond(graph.Edge):
     def __init__(self, origin, destination):
         graph.Edge.__init__(origin, destination)
 
-        # Any methods particular to quadruple bonds
+    def __str__(self):
+        return 'Quadruple bond ' #+ graph.Edge.__str__(self)
 
 
 class AromaticBond(graph.Edge):
     def __init__(self, origin, destination):
         graph.Edge.__init__(self, origin, destination)
 
-        # Any methods particular to aromatic bonds
+    def __str__(self):
+        return 'Aromatic bond ' #+ graph.Edge.__str__(self)
 
 
 class Molecule(graph.Graph):
