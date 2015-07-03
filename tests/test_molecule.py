@@ -1,2 +1,2 @@
-from source import molecule
+import source.molecule as molecule
 import unittest

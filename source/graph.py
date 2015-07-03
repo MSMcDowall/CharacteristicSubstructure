@@ -110,6 +110,7 @@ class Graph(object):
         del self._vertices[first_vertex][second_vertex]
         del self._vertices[second_vertex][first_vertex]
 
+    # Create a printable string version of each vertex dictionary
     def dictionary_string(self, vertex):
         dictionary_string = {}
         for key, value in self._vertices[vertex].iteritems():

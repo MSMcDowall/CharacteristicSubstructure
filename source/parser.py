@@ -52,7 +52,7 @@ def square_atom(token, mole):
         atom = mole.add_aromatic_atom(d['element'], d['isotope'], hcount, charge)
         if _previous_atom:
             mole.add_aromatic_bond(_previous_atom, atom)
-    else:
+    elif not d['aromatic']:
         atom = mole.add_atom(d['element'], d['isotope'], hcount, charge)
         add_bond(atom, mole)
     _previous_atom = atom
