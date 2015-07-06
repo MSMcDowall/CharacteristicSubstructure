@@ -2,7 +2,7 @@ import source.graph as graph
 import unittest
 
 
-class TestVertex(unittest.TestCase):
+class VertexTestCase(unittest.TestCase):
     def setUp(self):
         self.x = graph.Vertex('C')
 
@@ -10,7 +10,7 @@ class TestVertex(unittest.TestCase):
         self.assertEqual(self.x.element, 'C')
 
 
-class TestEdge(unittest.TestCase):
+class EdgeTestCase(unittest.TestCase):
     def setUp(self):
         self.x = graph.Vertex('C')
         self.y = graph.Vertex('He')
@@ -26,7 +26,7 @@ class TestEdge(unittest.TestCase):
         self.assertEqual(self.e.opposite(self.x), self.y)
 
 
-class TestGraph(unittest.TestCase):
+class GraphTestCase(unittest.TestCase):
     def setUp(self):
         self.g = graph.Graph()
         self.x = self.g.add_vertex('C')
@@ -71,9 +71,5 @@ class TestGraph(unittest.TestCase):
         self.assertTrue(self.g.contains_edge(self.x, self.z))
         self.assertFalse(self.g.contains_edge(self.y, self.z))
 
-def main():
-    unittest.main()
-
-
 if __name__ == '__main__':
-    main()
+    unittest.main()

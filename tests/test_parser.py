@@ -2,12 +2,12 @@ import source.parser as parser
 import source.molecule as molecule
 import unittest
 
-class TestParser(unittest.TestCase):
+class ParserTestCase(unittest.TestCase):
     def setUp(self):
-        self.m = molecule.Molecule('')
+        pass
 
     def tearDown(self):
-        self.m.clear()
+        pass
 
     def test_organic(self):
         self.m = parser.parse_smiles('CN')
@@ -17,39 +17,39 @@ class TestParser(unittest.TestCase):
         self.assertEqual(second.element, 'N')
         self.assertIsInstance(self.m._vertices[first][second], molecule.SingleBond)
 
-    # Through debugger does not enter into add_single_bond but when run normally it does
-    """
     def test_square(self):
-        #square = '[N@@H+3]'
-        self.m = parser.parse_smiles('[12C@H2--]')
+        self.m = parser.parse_smiles('[12C@H2--][N@@H+3]')
         first = self.m.vertices[0]
-        #second = self.m.vertices[1]
+        second = self.m.vertices[1]
         self.assertEqual(first.element, 'C')
         self.assertEqual(first.isotope, '12')
         self.assertEqual(first.hydrogen, '2')
         self.assertEqual(first.charge, '-2')
-    """
+        self.assertEqual(second.element, 'N')
+        self.assertEqual(second.hydrogen, '1')
+        self.assertEqual(second.charge, '+3')
+        self.assertIsInstance(self.m._vertices[first][second], molecule.SingleBond)
 
     def test_ring(self):
-        pass
+        self.m = parser.parse_smiles('c1ccccc1')
+        first = self.m.vertices[0]
+        last = self.m.vertices[5]
+        self.assertIsInstance(self.m._vertices[first][last], molecule.AromaticBond)
 
-    def test_branch_start(self):
-        pass
+    def test_branch(self):
+        self.m = parser.parse_smiles('C(OC)C')
 
-    def test_branch_end(self):
-        pass
+
 
     def test_bond(self):
         pass
 
     def test_dot(self):
         self.m = parser.parse_smiles('C.N')
-        pass
-
-
-def main():
-    unittest.main()
+        self.c = self.m.vertices[0]
+        self.n = self.m.vertices[1]
+        self.assertFalse(self.m.contains_edge(self.c, self.n))
 
 
 if __name__ == '__main__':
-    main()
+    unittest.main()

@@ -61,7 +61,7 @@ class DoubleBond(graph.Edge):
 
 class TripleBond(graph.Edge):
     def __init__(self, origin, destination):
-        graph.Edge.__init__(origin, destination)
+        graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
         return 'Triple bond ' #+ graph.Edge.__str__(self)
@@ -69,7 +69,7 @@ class TripleBond(graph.Edge):
 
 class QuadrupleBond(graph.Edge):
     def __init__(self, origin, destination):
-        graph.Edge.__init__(origin, destination)
+        graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
         return 'Quadruple bond ' #+ graph.Edge.__str__(self)
@@ -84,9 +84,9 @@ class AromaticBond(graph.Edge):
 
 
 class Molecule(graph.Graph):
-    def __init__(self, string):
+    def __init__(self, smiles):
         graph.Graph.__init__(self)
-        self._smiles_string = string        # The original SMILES string
+        self._smiles_string = smiles        # The original SMILES string
 
     # Return the original SMILES string
     @property

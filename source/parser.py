@@ -38,6 +38,7 @@ def square_atom(token, mole):
     d = token.groupdict()
     hcount = None
     charge = None
+    atom = None
     if d['hydrogen']:
         hcount = 1
         if d['hcount']:
@@ -140,7 +141,7 @@ def parse_smiles(smiles):
             dot()
     return mol
 complicated = 'O=C7N2c1ccccc1[C@@]64[C@@H]2[C@@H]3[C@@H](OC/C=C5\[C@@H]3C[C@@H]6N(CC4)C5)C7'
-mol = parse_smiles('')
+mol = parse_smiles('[12C@H2--][N@@H+3]')
 for m in mol.vertices:
     print str(m) + ': '
     print mol.dictionary_string(m)
