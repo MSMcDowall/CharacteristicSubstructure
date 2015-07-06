@@ -3,6 +3,7 @@ import source.molecule as molecule
 import unittest
 
 class ParserTestCase(unittest.TestCase):
+    # TODO Currently focused on functionality testing; add unit tests
     def setUp(self):
         pass
 
@@ -28,17 +29,26 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(second.element, 'N')
         self.assertEqual(second.hydrogen, '1')
         self.assertEqual(second.charge, '+3')
+        print self.m._vertices[first]
         self.assertIsInstance(self.m._vertices[first][second], molecule.SingleBond)
 
-    def test_ring(self):
-        self.m = parser.parse_smiles('c1ccccc1')
+    def test_aromatic(self):
+        self.m = parser.parse_smiles('ccN')
+        # Aromatic atoms 1 and 2
+        # Aromatic bond between 1 and 2
+        # Single bond between 2 and 3
+
+    def test_ring_bond(self):
+        self.m = parser.parse_smiles('C1CCC1')
         first = self.m.vertices[0]
-        last = self.m.vertices[5]
-        self.assertIsInstance(self.m._vertices[first][last], molecule.AromaticBond)
+        last = self.m.vertices[3]
+        print repr(first)
+        print repr(last)
+        print self.m._vertices[first]
+        self.assertIsInstance(self.m._vertices[first][last], molecule.SingleBond)
 
     def test_branch(self):
         self.m = parser.parse_smiles('C(OC)C')
-
 
 
     def test_bond(self):

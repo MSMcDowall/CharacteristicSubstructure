@@ -124,7 +124,7 @@ class Molecule(graph.Graph):
         return new_quadruple
 
     def add_aromatic_bond(self, origin, destination):
-        new_aromatic_bond = AromaticAtom(origin, destination)
+        new_aromatic_bond = AromaticBond(origin, destination)
         graph.Graph.edge_to_graph(self, origin, destination, new_aromatic_bond)
         return new_aromatic_bond
 
