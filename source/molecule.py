@@ -2,27 +2,12 @@ import graph
 
 
 class Atom(graph.Vertex):
-    def __init__(self, element, isotope=None, hydrogen=None, charge=None, ring_break=False):
+    def __init__(self, element, isotope=None, hydrogen=None, charge=None):
         graph.Vertex.__init__(self, element)
-        self._isotope = isotope
-        self._hydrogen = hydrogen
-        self._charge = charge
-        self._ring_break = ring_break
-
-    # Return the isotope number of the vertex
-    @property
-    def isotope(self):
-        return self._isotope
-
-    # Return the number of hydrogens attached to the vertex
-    @property
-    def hydrogen(self):
-        return self._hydrogen
-
-    # Return the charge of the element
-    @property
-    def charge(self):
-        return self._charge
+        self.isotope = isotope
+        self.hydrogen = hydrogen
+        self.charge = charge
+        self.ring_break = False
 
     # Return if atom was the break point of a ring
     @property
@@ -32,7 +17,7 @@ class Atom(graph.Vertex):
     @ring_break.setter
     def ring_break(self, boolean):
         self._ring_break = boolean
-
+    
     def __str__(self):
         return 'Atom element %s at position %s' % (self.element, self.position)
 

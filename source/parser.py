@@ -91,15 +91,20 @@ class Parser(object):
                     new_bond = mole.add_quadruple_bond(self._previous_atom, atom)
                 if d['arom_bond'] is not None:
                     new_bond = mole.add_aromatic_bond(self._previous_atom, atom)
-            _previous_bond = None
+            self._previous_bond = None
         else:
             new_bond = None
         return new_bond
 
     def add_bond_to_aromatic_atom(self, atom, mole):
-        if self._previous_atom is molecule.AromaticAtom:
+        print 'into method'
+        print self._previous_atom
+        print repr(self._previous_atom)
+        if isinstance(self._previous_atom, molecule.AromaticAtom):
+            print 'pass aro test'
             mole.add_aromatic_bond(self._previous_atom, atom)
-        elif self._previous_atom is not None and self._previous_atom is not molecule.AromaticAtom:
+        elif self._previous_atom is not None and not isinstance(self._previous_atom, molecule.AromaticAtom):
+            print 'fail aro test'
             mole.add_single_bond(self._previous_atom, atom)
 
     def ring(self, token, mole):
@@ -111,8 +116,8 @@ class Parser(object):
             ring_atom = self._break_points[number][0]
             ring_bond = self._break_points[number][1]
             if ring_bond is None and self._previous_bond is None:    # No bond symbol has been specified
-                if ring_atom is molecule.AromaticAtom:
-                    self.add_bond_to_aromatic_atom(ring_atom)
+                if isinstance(ring_atom, molecule.AromaticAtom):
+                    self.add_bond_to_aromatic_atom(ring_atom, mole)
                 else:
                     mole.add_single_bond(self._previous_atom, ring_atom)
             elif ring_bond is not None:                         # A bond symbol was specified at the ring opening
@@ -156,12 +161,11 @@ class Parser(object):
 
 if __name__ == '__main__':
     #complicated = 'O=C7N2c1ccccc1[C@@]64[C@@H]2[C@@H]3[C@@H](OC/C=C5\[C@@H]3C[C@@H]6N(CC4)C5)C7'
-    mole = Parser().parse_smiles('C1SON1')
+    mole = Parser().parse_smiles('c1ccccc1')
     for m in mole.vertices:
         print str(m) + ': '
-        print m.position
         print mole.dictionary_string(m)
 
+
     for e in mole.edges:
-        print e.endpoints
-        print e.endpoints_position()
+        print str(e)

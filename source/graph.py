@@ -1,13 +1,8 @@
 # A single Vertex of Graph which includes its element
 class Vertex(object):
     def __init__(self, element):
-        self._element = element
-        self.position = 0
-
-    # Return the element of the vertex
-    @property
-    def element(self):
-        return self._element
+        self.element = element
+        self.position = 0       # The position of the vertex in the graph
 
     # Create a hash of the vertex object so it can be used as a key
     def __hash__(self):
@@ -19,20 +14,16 @@ class Edge(object):
     def __init__(self, origin, destination, element=None):
         self._origin = origin
         self._destination = destination
-        self._element = element
+        self.element = element
 
     # Return the endpoints of the edge as a tuple
     @property
     def endpoints(self):
         return (self._origin, self._destination)
 
+    # Return the position of the two endpoints
     def endpoints_position(self):
         return self._origin.position
-
-    # Return the element of the edge
-    @property
-    def element(self):
-        return self._element
 
     # Return the opposite endpoint of the edge to the one given as a parameter
     def opposite(self, vertex):
@@ -55,7 +46,7 @@ class Edge(object):
 class Graph(object):
     def __init__(self):
         self._vertices = {}         # Dictionary of vertices and maps them to their adjacent vertices
-        self._vertex_count = 0      # The number of vertices within the graph
+        self.size = 0      # The number of vertices within the graph
 
     # Returns all the vertices in the graph
     @property
@@ -70,15 +61,10 @@ class Graph(object):
             edges.update(adjacentVertex.values())
         return edges
 
-    # Returns the number of vertices in the graph
-    @property
-    def size(self):
-        return len(self._vertices)
-
     # Clears the graph
     def clear(self):
         self._vertices = {}
-        self._vertex_count = 0
+        self.size = 0
 
     # Creates a new vertex object and assigns it a dictionary which will contain all adjacent vertices and edges
     # Method is split in two to aid in the inheritance of this method
@@ -90,7 +76,7 @@ class Graph(object):
     def vertex_to_graph(self, vertex):
         self._vertices[vertex] = {}
         vertex.position = self.size
-        self._vertex_count = + 1
+        self.size = + 1
 
     # Deletes the vertex object
     def remove_vertex(self, vertex):
