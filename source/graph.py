@@ -2,6 +2,7 @@
 class Vertex(object):
     def __init__(self, element):
         self._element = element
+        self.position = 0
 
     # Return the element of the vertex
     @property
@@ -86,6 +87,7 @@ class Graph(object):
     def vertex_to_graph(self, vertex):
         self._vertices[vertex] = {}
         self._vertex_count = + 1
+        vertex.position = self.size
 
     # Deletes the vertex object
     def remove_vertex(self, vertex):

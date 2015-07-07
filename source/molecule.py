@@ -50,21 +50,21 @@ class SingleBond(graph.Edge):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        return 'Single bond ' #+ graph.Edge.__str__(self)
+        return 'Single bond ' + graph.Edge.__str__(self)
 
 class DoubleBond(graph.Edge):
     def __init__(self, origin, destination):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        return 'Double bond ' #+ graph.Edge.__str__(self)
+        return 'Double bond ' + graph.Edge.__str__(self)
 
 class TripleBond(graph.Edge):
     def __init__(self, origin, destination):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        return 'Triple bond ' #+ graph.Edge.__str__(self)
+        return 'Triple bond ' + graph.Edge.__str__(self)
 
 
 class QuadrupleBond(graph.Edge):
@@ -72,7 +72,7 @@ class QuadrupleBond(graph.Edge):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        return 'Quadruple bond ' #+ graph.Edge.__str__(self)
+        return 'Quadruple bond ' + graph.Edge.__str__(self)
 
 
 class AromaticBond(graph.Edge):
@@ -80,7 +80,7 @@ class AromaticBond(graph.Edge):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        return 'Aromatic bond ' #+ graph.Edge.__str__(self)
+        return 'Aromatic bond ' + graph.Edge.__str__(self)
 
 
 class Molecule(graph.Graph):
