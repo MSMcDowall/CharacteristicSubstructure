@@ -26,6 +26,9 @@ class Edge(object):
     def endpoints(self):
         return (self._origin, self._destination)
 
+    def endpoints_position(self):
+        return self._origin.position
+
     # Return the element of the edge
     @property
     def element(self):
@@ -86,8 +89,8 @@ class Graph(object):
 
     def vertex_to_graph(self, vertex):
         self._vertices[vertex] = {}
-        self._vertex_count = + 1
         vertex.position = self.size
+        self._vertex_count = + 1
 
     # Deletes the vertex object
     def remove_vertex(self, vertex):

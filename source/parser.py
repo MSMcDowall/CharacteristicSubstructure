@@ -74,7 +74,6 @@ class Parser(object):
             atom = mole.add_atom(d['organic'])
             self.add_bond(atom, mole)
         self._previous_atom = atom
-        print self._previous_atom
 
     def add_bond(self, atom, mole):
         if self._previous_atom is not None:
@@ -112,9 +111,10 @@ class Parser(object):
             ring_atom = self._break_points[number][0]
             ring_bond = self._break_points[number][1]
             if ring_bond is None and self._previous_bond is None:    # No bond symbol has been specified
-                print 'single'
-                e = mole.add_single_bond(self._previous_atom, ring_atom)
-                print e
+                if ring_atom is molecule.AromaticAtom:
+                    self.add_bond_to_aromatic_atom(ring_atom)
+                else:
+                    mole.add_single_bond(self._previous_atom, ring_atom)
             elif ring_bond is not None:                         # A bond symbol was specified at the ring opening
                 self._previous_bond = ring_bond
                 e = self.add_bond(ring_atom, mole)
@@ -161,3 +161,7 @@ if __name__ == '__main__':
         print str(m) + ': '
         print m.position
         print mole.dictionary_string(m)
+
+    for e in mole.edges:
+        print e.endpoints
+        print e.endpoints_position()

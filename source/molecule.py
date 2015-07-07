@@ -34,7 +34,7 @@ class Atom(graph.Vertex):
         self._ring_break = boolean
 
     def __str__(self):
-        return 'Atom element %s' % self.element
+        return 'Atom element %s at position %s' % (self.element, self.position)
 
 
 class AromaticAtom(Atom):
@@ -42,7 +42,7 @@ class AromaticAtom(Atom):
         Atom.__init__(self, element, isotope, hydrogen, charge)
 
     def __str__(self):
-        return 'Aromatic element %s' % self.element
+        return 'Aromatic element %s at position %s' % (self.element, self.position)
 
 
 class SingleBond(graph.Edge):
