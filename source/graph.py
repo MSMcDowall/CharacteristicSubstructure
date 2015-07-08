@@ -73,10 +73,12 @@ class Graph(object):
         self.vertex_to_graph(new_vertex)
         return new_vertex
 
+    # Adds a vertex that has already been created to the graph 
     def vertex_to_graph(self, vertex):
         self._vertices[vertex] = {}
         vertex.position = self.size
-        self.size = + 1
+        a = self.size
+        self.size = a + 1
 
     # Deletes the vertex object
     def remove_vertex(self, vertex):
@@ -92,6 +94,7 @@ class Graph(object):
         self.edge_to_graph(first_vertex, second_vertex, new_edge)
         return new_edge
 
+    # Adds a bond that has already been created to the graph
     def edge_to_graph(self, first_vertex, second_vertex, edge):
         self._vertices[first_vertex][second_vertex] = edge
         self._vertices[second_vertex][first_vertex] = edge

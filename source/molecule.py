@@ -1,6 +1,7 @@
 import graph
 
 
+# Represents an atom within the molecule, includes the atoms chemical properties
 class Atom(graph.Vertex):
     def __init__(self, element, isotope=None, hydrogen=None, charge=None):
         graph.Vertex.__init__(self, element)
@@ -22,6 +23,7 @@ class Atom(graph.Vertex):
         return 'Atom element %s at position %s' % (self.element, self.position)
 
 
+# Represents an aromatic atom and inherits the chemical properties that are present in an atom
 class AromaticAtom(Atom):
     def __init__(self, element, isotope=None, hydrogen=None, charge=None):
         Atom.__init__(self, element, isotope, hydrogen, charge)
