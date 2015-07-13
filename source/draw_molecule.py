@@ -13,6 +13,7 @@ def draw_molecule(mole):
             edge_list.append(e.endpoints_position() * 3)
         elif e is molecule.QuadrupleBond:
             edge_list.append(e.endpoints_position() * 4)
+    # Use the igraph graph to create a representation that can be drawn on ipython
     g = igraph.Graph()
     print g
     g.add_vertices(mole.size)

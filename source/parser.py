@@ -75,6 +75,7 @@ class Parser(object):
             self.add_bond(atom, mole)
         self._previous_atom = atom
 
+    # Adds a bond to the molecule and if a bond symbol has been encountered it tests the type
     def add_bond(self, atom, mole):
         if self._previous_atom is not None:
             if self._previous_bond is None:
@@ -96,17 +97,14 @@ class Parser(object):
             new_bond = None
         return new_bond
 
+    # Tests if a single or an aromatic bond should be added to an aromatic atom
     def add_bond_to_aromatic_atom(self, atom, mole):
-        print 'into method'
-        print self._previous_atom
-        print repr(self._previous_atom)
         if isinstance(self._previous_atom, molecule.AromaticAtom):
-            print 'pass aro test'
             mole.add_aromatic_bond(self._previous_atom, atom)
         elif self._previous_atom is not None and not isinstance(self._previous_atom, molecule.AromaticAtom):
-            print 'fail aro test'
             mole.add_single_bond(self._previous_atom, atom)
 
+    # Called when a number is encountered that is not in square brackets
     def ring(self, token, mole):
         number = token.groupdict()['ring']
         self._previous_atom.ring_break = True
@@ -126,18 +124,26 @@ class Parser(object):
             elif self._previous_bond is not None:                    # A bond symbol was specified at the ring closing
                 e = self.add_bond(ring_atom, mole)
 
+    # When a branch is started the previous atom is stored as branch root
+    # Using a stack ensures that nested branches are closed in the correct order
     def branch_start(self):
         self._branch_root.append(self._previous_atom)
 
+    # After a branch return back to the root of the branch
     def branch_end(self):
         self._previous_atom = self._branch_root.pop()
 
+    # When a bond symbol is encountered the match token is stored in the previous bond
+    # Once the subsequent atom has been made a bond can be made depending on the properties of the token
     def bond(self, token):
         self._previous_bond = token
-
+        
+    # Dot means that there is no bond between the atoms on either side of it
+    # By removing the reference to the previous atom it ensures no bond is created
     def dot(self):
         self._previous_atom = None
 
+    # Take in a SMILES string and create a molecule object
     def parse_smiles(self, smiles):
         tokens = re.finditer(self.smiles_string_pattern, smiles)
         mol = molecule.Molecule(smiles)
@@ -161,7 +167,7 @@ class Parser(object):
 
 if __name__ == '__main__':
     #complicated = 'O=C7N2c1ccccc1[C@@]64[C@@H]2[C@@H]3[C@@H](OC/C=C5\[C@@H]3C[C@@H]6N(CC4)C5)C7'
-    mole = Parser().parse_smiles('c1ccccc1')
+    mole = Parser().parse_smiles('CNO')
     for m in mole.vertices:
         print str(m) + ': '
         print mole.dictionary_string(m)
