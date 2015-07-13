@@ -166,6 +166,5 @@ if __name__ == '__main__':
         print str(m) + ': '
         print mole.dictionary_string(m)
 
-
     for e in mole.edges:
         print str(e)

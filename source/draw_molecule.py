@@ -1,4 +1,5 @@
 import molecule
+import parser
 import igraph
 
 def draw_molecule(mole):
@@ -13,13 +14,21 @@ def draw_molecule(mole):
         elif e is molecule.QuadrupleBond:
             edge_list.append(e.endpoints_position() * 4)
     g = igraph.Graph()
+    print g
     g.add_vertices(mole.size)
+    print mole.size
+    print g
     g.add_edges(edge_list)
-    vertex_labels = []
-    for v in mole.vertices:
-        vertex_labels.append(str(v.element))
-    g.vs["label"] = vertex_labels
+    print g
+    # vertex_labels = []
+    # for v in mole.vertices:
+    #     vertex_labels.append(str(v.element))
+    # g.vs["label"] = vertex_labels
     return g
 
+if __name__ == '__main__':
+    mole = parser.Parser().parse_smiles('CNNC')
+    graph = draw_molecule(mole)
+    print repr(graph)
 
 
