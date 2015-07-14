@@ -23,7 +23,7 @@ class Edge(object):
 
     # Return the position of the two endpoints
     def endpoints_position(self):
-        return self._origin.position
+        return (self._origin.position, self._destination.position)
 
     # Return the opposite endpoint of the edge to the one given as a parameter
     def opposite(self, vertex):
@@ -129,3 +129,11 @@ class Graph(object):
             return self._vertices[first_vertex][second_vertex]
         else:
             return False
+
+if __name__ == '__main__':
+    a = Vertex('C')
+    a.position = 0
+    b = Vertex('N')
+    b.position = 1
+    e = Edge(a, b)
+    print e.endpoints_position()

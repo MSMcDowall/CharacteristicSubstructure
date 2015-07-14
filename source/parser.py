@@ -1,5 +1,6 @@
 import re
 import molecule
+import graph
 
 class Parser(object):
     smiles_string_pattern = re.compile(r"""(?P<square_atom>
@@ -21,8 +22,8 @@ class Parser(object):
                                             (?P<single>-)|
                                             (?P<double>=)|
                                             (?P<triple>\#)|
-                                            (?P<quadruple>$)|
-                                            (?P<arom_bond>:))
+                                            (?P<quadruple>\$)|
+                                            (?P<arom_bond>\:))
                                         |(?P<ring>\d)
                                         |(?P<branch_start>\()
                                         |(?P<branch_end>\))
@@ -174,3 +175,5 @@ if __name__ == '__main__':
 
     for e in mole.edges:
         print str(e)
+        print e.endpoints_position()
+        print e.endpoints
