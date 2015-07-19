@@ -132,31 +132,28 @@ class Graph(object):
             return False
 
     # A depth first search which visits each node in turn
+    # A set is then compiled of all the paths within the graph
     # Algorithm structure from Handbook of Graph Theory, Gross & Yellen
-    def depth_first_search(self):
+    def find_all_paths(self):
         completed = []
-        all_paths = []
+        all_paths = set()
         for v in self.vertices:
             if v not in completed:
-                print str(v)
                 for w in self.vertices:
                     w.visited = False
                 path_stack = []
                 self.dfs(v, path_stack, all_paths)
                 completed.append(v)
-                print all_paths
         return all_paths
 
     # The recursive element of the depth first search
     def dfs(self, v, path_stack, all_paths):
-        print v
         v.visited = True
         path_stack.append(v.element + '-')
-        print path_stack
         for w in self._vertices[v].keys():
             if not w.visited:
                 self.dfs(w, path_stack, all_paths)
-        all_paths.append(''.join(path_stack))
+        all_paths.add(''.join(path_stack))
         path_stack.pop()
 
 if __name__ == '__main__':
