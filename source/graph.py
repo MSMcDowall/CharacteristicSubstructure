@@ -134,25 +134,30 @@ class Graph(object):
     # A depth first search which visits each node in turn
     # Algorithm structure from Handbook of Graph Theory, Gross & Yellen
     def depth_first_search(self):
+        completed = []
+        all_paths = []
         for v in self.vertices:
-            v.visited = False
-        for v in self.vertices:
-            print str(v)
-            if not v.visited:
-                path = []
-                self.dfs(v, path)
-                self.paths.append(''.join(path))
-                print self.paths
-                # Add each completed search string to self.paths
+            if v not in completed:
+                print str(v)
+                for w in self.vertices:
+                    w.visited = False
+                path_stack = []
+                self.dfs(v, path_stack, all_paths)
+                completed.append(v)
+                print all_paths
+        return all_paths
 
     # The recursive element of the depth first search
-    def dfs(self, v, path):
+    def dfs(self, v, path_stack, all_paths):
+        print v
         v.visited = True
-        path.append('(' + v.element)
+        path_stack.append(v.element + '-')
+        print path_stack
         for w in self._vertices[v].keys():
             if not w.visited:
-                self.dfs(w, path)
-        path.append(v.element + ')')
+                self.dfs(w, path_stack, all_paths)
+        all_paths.append(''.join(path_stack))
+        path_stack.pop()
 
 if __name__ == '__main__':
     a = Vertex('C')
