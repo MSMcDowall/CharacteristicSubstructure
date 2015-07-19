@@ -168,12 +168,5 @@ class Parser(object):
 
 if __name__ == '__main__':
     #complicated = 'O=C7N2c1ccccc1[C@@]64[C@@H]2[C@@H]3[C@@H](OC/C=C5\[C@@H]3C[C@@H]6N(CC4)C5)C7'
-    mole = Parser().parse_smiles('CNO')
-    for m in mole.vertices:
-        print str(m) + ': '
-        print mole.dictionary_string(m)
-
-    for e in mole.edges:
-        print str(e)
-        print e.endpoints_position()
-        print e.endpoints
+    mole = Parser().parse_smiles('CNO(BSP)FI')
+    mole.depth_first_search()

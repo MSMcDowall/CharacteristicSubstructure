@@ -3,6 +3,7 @@ class Vertex(object):
     def __init__(self, element):
         self.element = element
         self.position = 0       # The position of the vertex in the graph
+        self.visited = False    # An indicator that is used in DFS
 
     # Create a hash of the vertex object so it can be used as a key
     def __hash__(self):
@@ -46,7 +47,8 @@ class Edge(object):
 class Graph(object):
     def __init__(self):
         self._vertices = {}         # Dictionary of vertices and maps them to their adjacent vertices
-        self.size = 0      # The number of vertices within the graph
+        self.size = 0               # The number of vertices within the graph
+        self.paths = []             # A collection of all the path strings in the graph
 
     # Returns all the vertices in the graph
     @property
@@ -77,8 +79,7 @@ class Graph(object):
     def vertex_to_graph(self, vertex):
         self._vertices[vertex] = {}
         vertex.position = self.size
-        a = self.size
-        self.size = a + 1
+        self.size += 1
 
     # Deletes the vertex object
     def remove_vertex(self, vertex):
@@ -129,6 +130,29 @@ class Graph(object):
             return self._vertices[first_vertex][second_vertex]
         else:
             return False
+
+    # A depth first search which visits each node in turn
+    # Algorithm structure from Handbook of Graph Theory, Gross & Yellen
+    def depth_first_search(self):
+        for v in self.vertices:
+            v.visited = False
+        for v in self.vertices:
+            print str(v)
+            if not v.visited:
+                path = []
+                self.dfs(v, path)
+                self.paths.append(''.join(path))
+                print self.paths
+                # Add each completed search string to self.paths
+
+    # The recursive element of the depth first search
+    def dfs(self, v, path):
+        v.visited = True
+        path.append('(' + v.element)
+        for w in self._vertices[v].keys():
+            if not w.visited:
+                self.dfs(w, path)
+        path.append(v.element + ')')
 
 if __name__ == '__main__':
     a = Vertex('C')

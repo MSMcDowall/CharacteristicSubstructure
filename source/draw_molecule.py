@@ -37,7 +37,7 @@ def draw_molecule(mole):
     return g
 
 if __name__ == '__main__':
-    mole = parser.Parser().parse_smiles('CC=C.C$CC.CCC')
+    mole = parser.Parser().parse_smiles('CNO(BSP)FI')
     print mole.vertices
     graph = draw_molecule(mole)
 
