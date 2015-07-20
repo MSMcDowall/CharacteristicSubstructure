@@ -136,30 +136,24 @@ class Graph(object):
     # Algorithm structure from Handbook of Graph Theory, Gross & Yellen
     def find_all_paths(self):
         completed = []
-        all_paths = set()
+        all_paths = {}
         for v in self.vertices:
             if v not in completed:
                 for w in self.vertices:
                     w.visited = False
                 path_stack = []
-                self.dfs(v, path_stack, all_paths)
+                self.find(v, path_stack, all_paths)
                 completed.append(v)
         return all_paths
 
     # The recursive element of the depth first search
-    def dfs(self, v, path_stack, all_paths):
+    def find(self, v, path_stack, all_paths):
         v.visited = True
         path_stack.append(v.element + '-')
         for w in self._vertices[v].keys():
             if not w.visited:
-                self.dfs(w, path_stack, all_paths)
-        all_paths.add(''.join(path_stack))
+                self.find(w, path_stack, all_paths)
+        path = ''.join(path_stack)
+        all_paths[path] = len(path)/2
+        self.paths.append(path)
         path_stack.pop()
-
-if __name__ == '__main__':
-    a = Vertex('C')
-    a.position = 0
-    b = Vertex('N')
-    b.position = 1
-    e = Edge(a, b)
-    print e.endpoints_position()

@@ -1,7 +1,9 @@
 import re
 import molecule
-import graph
 
+
+# Contains the functions and variables required to parse a SMILES string into a molecule object
+# Follows the OpenSMILES specification [opensmiles.org]
 class Parser(object):
     smiles_string_pattern = re.compile(r"""(?P<square_atom>
                                             (?P<open_bracket>\[)
@@ -32,14 +34,16 @@ class Parser(object):
                                     """, re.VERBOSE)
 
     def __init__(self):
-        self._previous_atom = None
+        self._previous_atom = None   # Holds the previous atom object which was encountered
         self._previous_bond = None   # If the previous token is a bond save token here
         self._break_points = {}      # Uses the number of the break point as a key and the vertex
         self._branch_root = []       # Used as stack with the append() and pop() methods
 
+    # Adds an atom to the molecule which has specified hydrogens, charge and weight (isotope)
     def square_atom(self, token, mole):
         d = token.groupdict()
 
+        # Checks if an explicit hydrogen (and number of hydrogens) has been specified
         if d['hydrogen'] is not None:
             hcount = '1'
             if d['hcount'] is not None:
@@ -47,10 +51,12 @@ class Parser(object):
         else:
             hcount = None
 
+        # Checks if an explicit charge has been specified
         if d['charge'] is not None:
             charge = d['charge']
             if d['chargecount'] is not None:
                 charge = d['charge'] + d['chargecount']
+        # Accepts the now depreciated ++ and -- to signify +2 and -2 respectively
         elif d['posdouble'] is not None:
             charge = '+2'
         elif d['negdouble'] is not None:
@@ -58,6 +64,9 @@ class Parser(object):
         else:
             charge = None
 
+        # Add atom including attributes to molecule
+        # Call the method to add a bond between this atom and the previous atom
+        # The bond method chosen depends on if the atom is aromatic (lowercase) or not
         if d['aromatic'] is not None:
             atom = mole.add_aromatic_atom(d['element'], d['isotope'], hcount, charge)
             self.add_bond_to_aromatic_atom(atom, mole)
@@ -66,14 +75,18 @@ class Parser(object):
             self.add_bond(atom, mole)
         self._previous_atom = atom
 
+    # Adds an organic atom [B,C,N,O,S,P,F,C,Br,I] which has implied hydrogens and standard charge and weight
     def organic(self, token, mole):
         d = token.groupdict()
+        # Add atom to molecule and call the method to add a bond between this atom and the previous atom
+        # The bond method chosen depends on if the atom is aromatic (lowercase) or not
         if d['oaromatic'] is not None:
             atom = mole.add_aromatic_atom(d['organic'])
             self.add_bond_to_aromatic_atom(atom, mole)
         else:
             atom = mole.add_atom(d['organic'])
             self.add_bond(atom, mole)
+        # Before moving to the next part of the SMILES string set this atom as the previous atom
         self._previous_atom = atom
 
     # Adds a bond to the molecule and if a bond symbol has been encountered it tests the type
@@ -165,8 +178,3 @@ class Parser(object):
             elif d['dot'] is not None:
                 self.dot()
         return mol
-
-if __name__ == '__main__':
-    #complicated = 'O=C7N2c1ccccc1[C@@]64[C@@H]2[C@@H]3[C@@H](OC/C=C5\[C@@H]3C[C@@H]6N(CC4)C5)C7'
-    mole = Parser().parse_smiles('C1NOBSF1NC')
-    print mole.find_all_paths()
