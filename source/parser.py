@@ -178,3 +178,9 @@ class Parser(object):
             elif d['dot'] is not None:
                 self.dot()
         return mol
+
+# if __name__ == '__main__':
+#     mole = Parser().parse_smiles('CNO')
+#     print mole._vertices
+#     mole.find_all_paths()
+#     print mole.paths

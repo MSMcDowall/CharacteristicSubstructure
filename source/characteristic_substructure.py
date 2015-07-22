@@ -1,8 +1,9 @@
 # coding=utf-8
-from parser import Parser
+import parser
 
 # Implementation of Finding Characteristic Substructures for Metabolite Classes
 # Ludwig, Hufsky, Elshamy, Böcker
+
 
 class CharacteristicSubstructure(object):
     def __init__(self, length_start=20, length_end=5, step=4, path_threshold=0.8, structure_threshold=0.8):
@@ -12,11 +13,12 @@ class CharacteristicSubstructure(object):
         self.path_threshold = path_threshold
         self.structure_threshold = structure_threshold
         self.molecules = []                 # All the given molecules
-        self.paths = {}                     # All the paths from all the molecules
+        self.paths = {}                     # All the paths from all the molecules with their lengths
 
     def find_graphs_paths(self, smiles_set):
         for smiles in smiles_set:
-            molecule = Parser().parse_smiles(smiles)
+            parsing = parser.Parser
+            molecule = parsing.parse_smiles(smiles)
             self.molecules.append(molecule)
             path_dict = molecule.find_all_paths()
             self.paths.update(path_dict)
@@ -35,6 +37,11 @@ class CharacteristicSubstructure(object):
         return representative_paths
 
     def find_representative_structures(self, rep_paths):
+        for path in rep_paths:
+            for mole in self.molecules:
+                matching_paths = [pair[1] for pair in mole.paths if pair[0] == path]
+                print matching_paths
+                # matching_paths contains a list of strings of positions in mole that match the path
         # Create structures from path
         # Test for subgraph in each molecule
         # Store location of each substructure that is isomorphic to representative structure as:
@@ -66,4 +73,6 @@ class CharacteristicSubstructure(object):
 if __name__ == '__main__':
     path_finder = CharacteristicSubstructure()
     print path_finder.find_graphs_paths(['CNO', 'POS', 'ClFIN', 'POSN'])
+    for mole in path_finder.molecules:
+        print mole.paths
     print path_finder.find_representative_paths(3)

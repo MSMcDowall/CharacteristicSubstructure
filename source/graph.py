@@ -48,7 +48,7 @@ class Graph(object):
     def __init__(self):
         self._vertices = {}         # Dictionary of vertices and maps them to their adjacent vertices
         self.size = 0               # The number of vertices within the graph
-        self.paths = []             # A collection of all the path strings in the graph
+        self.paths = []             # A collection of all the path strings as well as their positions in the graph
 
     # Returns all the vertices in the graph
     @property
@@ -135,25 +135,29 @@ class Graph(object):
     # A set is then compiled of all the paths within the graph
     # Algorithm structure from Handbook of Graph Theory, Gross & Yellen
     def find_all_paths(self):
-        completed = []
-        all_paths = {}
+        completed = []      # The nodes which have acted as a root for the search
+        all_paths = {}      # The dictionary of all the paths and their lengths (dict removes duplicate paths)
         for v in self.vertices:
             if v not in completed:
                 for w in self.vertices:
-                    w.visited = False
-                path_stack = []
-                self.find(v, path_stack, all_paths)
+                    w.visited = False       # Start search anew for each root
+                path_stack = []             # Used to create the string of the path
+                position_stack = []         # Used to create the string of positions
+                self.find(v, path_stack, position_stack, all_paths)
                 completed.append(v)
         return all_paths
 
     # The recursive element of the depth first search
-    def find(self, v, path_stack, all_paths):
+    def find(self, v, path_stack, position_stack, all_paths):
         v.visited = True
         path_stack.append(v.element + '-')
+        position_stack.append(str(v.position) + ' ')
         for w in self._vertices[v].keys():
             if not w.visited:
-                self.find(w, path_stack, all_paths)
+                self.find(w, path_stack, position_stack, all_paths)
         path = ''.join(path_stack)
+        positions = ''.join(position_stack)
         all_paths[path] = len(path)/2
-        self.paths.append(path)
+        self.paths.append((path, positions))
         path_stack.pop()
+        position_stack.pop()
