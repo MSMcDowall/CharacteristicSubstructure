@@ -39,9 +39,16 @@ class CharacteristicSubstructure(object):
     def find_representative_structures(self, rep_paths):
         for path in rep_paths:
             for mole in self.molecules:
-                matching_paths = [pair[1] for pair in mole.paths if pair[0] == path]
-                print matching_paths
+                matching_positions = [pair[1] for pair in mole.paths if pair[0] == path]    # List comprehension
+                print matching_positions
                 # matching_paths contains a list of strings of positions in mole that match the path
+                # Create molecule object
+                # For each number in matching_positions
+                #   Create mapping from number to atom in molecule
+                #   Create atom/aromatic atom with element type
+                #
+                # For each bond between number atoms
+                #   Create bond of same type
         # Create structures from path
         # Test for subgraph in each molecule
         # Store location of each substructure that is isomorphic to representative structure as:
