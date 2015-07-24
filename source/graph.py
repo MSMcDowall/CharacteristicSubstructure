@@ -48,7 +48,7 @@ class Graph(object):
     def __init__(self):
         self._vertices = {}         # Dictionary of vertices and maps them to their adjacent vertices
         self.size = 0               # The number of vertices within the graph
-        self.paths = []             # A collection of all the path strings as well as their positions in the graph
+        self.paths = []             # A collection of all the path strings as well as the vertices that are involved
 
     # Returns all the vertices in the graph
     @property
@@ -151,12 +151,12 @@ class Graph(object):
     def find(self, v, path_stack, position_stack, all_paths):
         v.visited = True
         path_stack.append(v.element + '-')
-        position_stack.append(str(v.position) + ' ')
+        position_stack.append(v)
         for w in self._vertices[v].keys():
             if not w.visited:
                 self.find(w, path_stack, position_stack, all_paths)
         path = ''.join(path_stack)
-        positions = ''.join(position_stack)
+        positions = list(position_stack)
         all_paths[path] = len(path)/2
         self.paths.append((path, positions))
         path_stack.pop()
