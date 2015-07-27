@@ -18,7 +18,7 @@ class Parser(object):
                                                 (?P<posdouble>[+][+])?
                                                 (?P<negdouble>[-][-])?
                                             (?P<close_bracket>\]))
-                                        |(?P<organic>B|C|N|O|S|P|F|Cl|Br|I
+                                        |(?P<organic>Br|B|Cl|C|N|O|S|P|F|I
                                             |(?P<oaromatic>b|c|n|o|s|p))
                                         |(?P<bond>
                                             (?P<single>-)|

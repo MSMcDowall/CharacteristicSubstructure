@@ -10,6 +10,7 @@ def draw_molecule(mole):
 
     # For each vertex and edge in molecule graph add node and edge in NetworkX graph
     for n in mole.vertices:
+        print n.element
         g.add_node(n.position, element=n.element)
     for e in mole.edges:
         if isinstance(e, molecule.SingleBond):
@@ -37,7 +38,7 @@ def draw_molecule(mole):
     return g
 
 if __name__ == '__main__':
-    mole = parser.Parser().parse_smiles('CNO(BSP)FI')
+    mole = parser.Parser().parse_smiles('ClBrCB')
     print mole.vertices
     graph = draw_molecule(mole)
 

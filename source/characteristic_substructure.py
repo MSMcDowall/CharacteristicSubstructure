@@ -1,6 +1,8 @@
 # coding=utf-8
 from parser import Parser
 import molecule
+import subprocess
+import os
 from draw_molecule import draw_molecule as draw
 
 
@@ -17,8 +19,8 @@ class CharacteristicSubstructure(object):
         self.structure_threshold = structure_threshold
         self.molecules = []                 # All the given molecules
         self.paths = {}                     # All the paths from all the molecules with their lengths
-        self.path_structures = {}           # Dictionary of path structures which has a dictionary of molecules that it
-                                            # appears in as its value
+        self.path_structures = {}           # Dictionary of path structures which has record of isomorphic molecule
+        self.structure_text = {}
 
     def find_graphs_paths(self, smiles_set):
         for smiles in smiles_set:
@@ -40,6 +42,30 @@ class CharacteristicSubstructure(object):
                     representative_paths.append(path)
         return representative_paths
 
+    def create_text(self, path_structure):
+        text = [str(path_structure.size) + '\n']
+        for vertex in path_structure.vertices:
+            for letter in vertex.element:
+                number = ord(letter)
+                text.append(str(number))
+            text.append(' ' + str(len(path_structure.neighbours(vertex))) + ' ')
+            for neighbour in path_structure.neighbours(vertex):
+                text.append(str(neighbour.position) + ' ')
+                edge = path_structure._vertices[vertex][neighbour]
+                if isinstance(edge, molecule.SingleBond):
+                    text.append('1 ')
+                elif isinstance(edge, molecule.DoubleBond):
+                    text.append('2 ')
+                elif isinstance(edge, molecule.TripleBond):
+                    text.append('3 ')
+                elif isinstance(edge, molecule.QuadrupleBond):
+                    text.append('4 ')
+                elif isinstance(edge, molecule.AromaticBond):
+                    text.append('5 ')
+            text.append('\n')
+        structure_string = ''.join(text)
+        self.structure_text[path_structure] = structure_string
+
     def create_structure(self, path, mole, vertices):
         structure = molecule.Molecule(path)
         molecule_map = {}
@@ -50,8 +76,6 @@ class CharacteristicSubstructure(object):
             elif isinstance(atom, molecule.AromaticAtom):
                 new_atom = structure.add_aromatic_atom(atom.element)
                 molecule_map[atom] = new_atom
-        print 'molecule map'
-        print molecule_map
         for atom in vertices:
             for neighbour in vertices:
                 edge = mole.contains_edge(atom, neighbour)
@@ -65,28 +89,95 @@ class CharacteristicSubstructure(object):
                     structure.add_quadruple_bond(molecule_map[atom], molecule_map[neighbour])
                 elif isinstance(edge, molecule.AromaticBond):
                     structure.add_aromatic_bond(molecule_map[atom], molecule_map[neighbour])
-        print structure
         for vertex in structure.vertices:
             print vertex
         self.path_structures[structure] = {mole: vertices}
+        self.create_text(structure)
         return structure
 
     def multiple_subgraphs(self, path, mole, positions):
         pass
 
+    def isomorphic_structure(self, pattern):
+        pattern_file = open('pattern', mode='wb')
+        pattern_file.write(self.structure_text[pattern])
+        print self.structure_text[pattern]
+        pattern_file.close()
+        pattern_check = open('pattern', mode='rb')
+        print pattern_check.readlines()
+        pattern_check.close()
+
+        # structure = self.path_structures.keys()[0]
+        # print' herey here'
+        # target_file = open('target', mode='w')
+        # print target_file
+        # print self.structure_text[structure]
+        # target_file.write(self.structure_text[structure])
+        # target_file.close()
+        # target_check = open('target', mode='r')
+        # print 'target doc contents'
+        # print target_check.readlines()
+        # target_check.close()
+        # print subprocess.call(["directedLAD/main", "-p", "pattern", "-t", "target", "-l", "-f"])
+
+        print self.path_structures.keys()
+        for structure in self.path_structures.keys():
+            print' herey here'
+            target_file = open('target', mode='wb')
+            print target_file
+            print self.structure_text[structure]
+            target_file.write(self.structure_text[structure])
+            target_file.close()
+            target_check = open('target', mode='rb')
+            print target_check.readlines()
+            target_check.close()
+            # print subprocess.call(["directedLAD/main", "-p", "pattern", "-t", "target", "-l", "-f"])
+            result = subprocess.check_output(["directedLAD/main", "-p", "pattern", "-t", "target", "-l", "-f"])
+            print result
+            print result[15]
+
+
+
+
+        # structure = self.path_structures.keys()[0]
+        # target_file = open('target', mode='wb')
+        # print target_file
+        # string = self.structure_text[structure]
+        # print string
+        # target_file.write(string)
+        # target_file.close()
+        # target_check = open('target', mode='rb')
+        # print target_check.readlines()
+
+
+
+        # structure = self.path_structures.keys()[0]
+        # target_file = open('target', mode='r+b')
+        # print target_file
+        # print self.structure_text[structure]
+        # target_file.write(self.structure_text[structure])
+        # print target_file.readlines()
+        # target_file.close()
+
+        #print os.system('directedLAD/main -p pattern -t target -l -f')
+        #print subprocess.call(["directedLAD/main", "-p", "pattern", "-t", "target", "-l", "-f"])
+        # print subprocess.check_output(["directedLAD/main", "-p", "pattern", "-t", "target", "-l", "-f"])
+
+
+
     def find_representative_structures(self, rep_paths):
         resresentative_structures = {}
         for path in rep_paths:
             for mole in self.molecules:
-                #if path in (pair[0] for pair in mole.paths):
-                    path_vertices = [pair[1] for pair in mole.paths if pair[0] == path]    # Lists of path vertices
-                    # If path_vertices > 1 go to special method
+                path_vertices = [pair[1] for pair in mole.paths if pair[0] == path]    # Lists of path vertices
+                # If path_vertices > 1 go to special method
+                if len(path_vertices) > 0:
                     if len(path_vertices) > 1:
                         new_structure = self.multiple_subgraphs(path, mole, path_vertices)
-                    elif len(path_vertices) > 0:
+                    else:
                         new_structure = self.create_structure(path, mole, path_vertices[0])
                     # If new_structure is isomorphic to another subgraph in path_structures.keys()
-                    #
+                    self.isomorphic_structure(new_structure)
         # Create structures from path
         # Test for subgraph in each molecule
         # Store location of each substructure that is isomorphic to representative structure as:
@@ -117,12 +208,8 @@ class CharacteristicSubstructure(object):
 
 if __name__ == '__main__':
     path_finder = CharacteristicSubstructure(path_threshold=0.5)
-    print path_finder.find_graphs_paths(['CNO', 'CPOS', 'ClFIN', 'POSN'])
-    for mole in path_finder.molecules:
-        print mole
-        draw(mole)
+    print path_finder.find_graphs_paths(['OCNF', 'CPOS', 'CNFO', 'POSN'])
     rep_paths = path_finder.find_representative_paths(3)
     print rep_paths
     structures = path_finder.find_representative_structures(rep_paths)
-    for subgraph in path_finder.path_structures.keys():
-        draw(subgraph)
+
