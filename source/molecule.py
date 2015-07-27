@@ -76,8 +76,7 @@ class Molecule(graph.Graph):
         self._smiles_string = smiles        # The original SMILES string
 
     # Return the original SMILES string
-    @property
-    def smiles_string(self):
+    def __str__(self):
         return self._smiles_string
 
     def add_atom(self, element, isotope=None, hydrogen=None, charge=None):

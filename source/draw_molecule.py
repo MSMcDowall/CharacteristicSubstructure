@@ -10,7 +10,6 @@ def draw_molecule(mole):
 
     # For each vertex and edge in molecule graph add node and edge in NetworkX graph
     for n in mole.vertices:
-        print n.element
         g.add_node(n.position, element=n.element)
     for e in mole.edges:
         if isinstance(e, molecule.SingleBond):
