@@ -155,9 +155,20 @@ class Graph(object):
         for w in self._vertices[v].keys():
             if not w.visited:
                 self.find(w, path_stack, position_stack, all_paths)
-        path = ''.join(path_stack)
+        letters = ''.join(path_stack)
+        path = letters[:-1]    # Remove final dash
         positions = list(position_stack)
-        all_paths[path] = len(path)/2
+        all_paths[path] = len(letters)/2
         self.paths.append((path, positions))
         path_stack.pop()
         position_stack.pop()
+
+if __name__ == '__main__':
+    G = Graph()
+    a = G.add_vertex('C')
+    b = G.add_vertex('N')
+    c = G.add_vertex('C')
+    G.add_edge(a, b)
+    G.add_edge(b, c)
+    print G.find_all_paths()
+    print G.paths
