@@ -2,6 +2,7 @@
 from parser import Parser
 import molecule
 import subprocess
+from collections import OrderedDict
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
 from draw_molecule import draw_molecule as draw
@@ -68,11 +69,6 @@ class CharacteristicSubstructure(object):
                     structure.add_quadruple_bond(molecule_map[atom], molecule_map[neighbour])
                 elif isinstance(edge, molecule.AromaticBond):
                     structure.add_aromatic_bond(molecule_map[atom], molecule_map[neighbour])
-        # Test if the structure has already been encountered - change here between LAD and nx isomorphism
-        # self.create_text(structure)
-        # self.LAD_isomorphism(structure, mole, vertices)
-        self.create_nx_graph(structure)
-        self.nx_isomorphism(structure, mole, vertices)
         return structure
 
     def create_text(self, path_structure):
@@ -132,9 +128,9 @@ class CharacteristicSubstructure(object):
         # Create a new NetworkX graph
         g = nx.Graph()
         # For each vertex and edge in molecule graph add node and edge in NetworkX graph
-        for n in path_structure.vertices:
+        for n in path_structure.vertices():
             g.add_node(n.position, element=n.element)
-        for e in path_structure.edges:
+        for e in path_structure.edges():
             if isinstance(e, molecule.SingleBond):
                 g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='single')
             elif isinstance(e, molecule.DoubleBond):
@@ -176,6 +172,7 @@ class CharacteristicSubstructure(object):
         print self.path_structures
 
     def find_representative_structures(self, rep_paths):
+        rep_structures = {}
         for path in rep_paths:
             print path
             for mole in self.molecules:
@@ -183,19 +180,25 @@ class CharacteristicSubstructure(object):
                 path_vertices = [pair[1] for pair in mole.paths if pair[0] == path]    # Lists of path vertices
                 print 'vert in path'
                 print path_vertices
-                for vertex_list in path_vertices:
-                    self.create_structure(path, mole, vertex_list)
-                # If path_vertices > 1 go to special method
-                # if len(path_vertices) > 0:
-                #     if len(path_vertices) > 1:
-                #         self.multiple_subgraphs(path, mole, path_vertices)
-                #     else:
-                #         print 'len greater than 0'
-                #         self.create_structure(path, mole, path_vertices[0])
-        # Consider here what happens if there is more than one subgraph isomorphic to path structure in molecule
-        # Store relative frequency of each structure (induced by path in rep_paths) as value in dictionary 'rep_strut'
-        # Sort 'rep_strut' based on frequency highest to lowest
-        # OrderedDict(sorted(rep_strut.items(), key=lambda x: x[1], reverse=True))
+                for vertices in path_vertices:
+                    structure = self.create_structure(path, mole, vertices)
+                    # Test if the structure has already been encountered - change here between LAD and nx isomorphism
+                    # self.create_text(structure)
+                    # self.LAD_isomorphism(structure, mole, vertices)
+                    self.create_nx_graph(structure)
+                    self.nx_isomorphism(structure, mole, vertices)
+        for structure in self.path_structures:
+            print 'length'
+            print len(self.path_structures[structure].keys())
+            print len(self.molecules)
+            relative_frequency = len(self.path_structures[structure].keys())/float(len(self.molecules))
+            print float(relative_frequency)
+            if float(relative_frequency) >= self.threshold:
+                rep_structures[structure] = relative_frequency
+        # Store relative frequency of each structure (induced by path in rep_paths) as value in dictionary
+        # Sort dictionary based on frequency highest to lowest
+        representative_structures = OrderedDict(sorted(rep_structures.items(), key=lambda x: x[1], reverse=True))
+        return representative_structures
 
     # NOT YET IN USE
     def add_structure_to_characteristic(self, sorted_list):
@@ -221,26 +224,13 @@ if __name__ == '__main__':
     path_finder = CharacteristicSubstructure(threshold=0.3)
     print 'all paths'
     print path_finder.find_graphs_paths(['CNO', 'CNOP', 'FSP'])
-    rep_paths = path_finder.find_representative_paths(3)
+    rep_paths = path_finder.find_representative_paths(2)
     print 'rep paths'
     print rep_paths
-    path_finder.find_representative_structures(rep_paths)
-    print path_finder.path_structures
-    print 'keys!'
-    for strut in path_finder.path_structures:
-        print strut
-        print path_finder.path_structures[strut]
-        #print path_finder.path_structures[strut]
-    draw(path_finder.path_structures.keys()[0])
-    draw(path_finder.path_structures.keys()[1])
-    draw(path_finder.path_structures.keys()[2])
-    print path_finder.multiple_structures
-    for s in path_finder.multiple_structures:
-        print 'string'
-        print s
-        for m in path_finder.multiple_structures[s]:
-            print 'mole'
-            print m
+    rep_struct = path_finder.find_representative_structures(rep_paths)
+    print 'rep struct'
+    print rep_struct
+
 
 
     # tester = CharacteristicSubstructure()

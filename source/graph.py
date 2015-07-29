@@ -55,7 +55,6 @@ class Graph(object):
         return self.adjacency_dictionary.keys()
 
     # Returns all the edges of the graph
-    @property
     def edges(self):
         edges = set()
         for adjacentVertex in self.adjacency_dictionary.values():
@@ -144,9 +143,9 @@ class Graph(object):
     def find_all_paths(self):
         completed = []      # The nodes which have acted as a root for the search
         all_paths = {}      # The dictionary of all the paths and their lengths (dict removes duplicate paths)
-        for v in self.vertices:
+        for v in self.vertices():
             if v not in completed:
-                for w in self.vertices:
+                for w in self.vertices():
                     w.visited = False       # Start search anew for each root
                 path_stack = []             # Used to create the string of the path
                 position_stack = []         # Used to create the string of positions
