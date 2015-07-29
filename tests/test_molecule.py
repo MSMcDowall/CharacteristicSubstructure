@@ -62,25 +62,25 @@ class MoleculeTestCase(unittest.TestCase):
 
     def test_add_single_bond(self):
         self.e = self.mole.add_single_bond(self.x, self.y)
-        self.assertEqual(self.mole._vertices[self.x][self.y], self.e)
+        self.assertEqual(self.mole.adjacency_dictionary[self.x][self.y], self.e)
 
     def test_add_double_bond(self):
         self.e = self.mole.add_double_bond(self.x, self.y)
-        self.assertEqual(self.mole._vertices[self.x][self.y], self.e)
+        self.assertEqual(self.mole.adjacency_dictionary[self.x][self.y], self.e)
 
     def test_add_triple_bond(self):
         self.e = self.mole.add_triple_bond(self.x, self.y)
-        self.assertEqual(self.mole._vertices[self.x][self.y], self.e)
+        self.assertEqual(self.mole.adjacency_dictionary[self.x][self.y], self.e)
 
     def test_add_quadruple_bond(self):
         self.e = self.mole.add_quadruple_bond(self.x, self.y)
-        self.assertEqual(self.mole._vertices[self.x][self.y], self.e)
+        self.assertEqual(self.mole.adjacency_dictionary[self.x][self.y], self.e)
 
     def test_add_aromatic_bond(self):
         self.arom_first = self.mole.add_aromatic_atom('c')
         self.arom_second = self.mole.add_aromatic_atom('n')
         self.e = self.mole.add_aromatic_bond(self.arom_first, self.arom_second)
-        self.assertEqual(self.mole._vertices[self.arom_first][self.arom_second], self.e)
+        self.assertEqual(self.mole.adjacency_dictionary[self.arom_first][self.arom_second], self.e)
 
 if __name__ == '__main__':
     unittest.main()

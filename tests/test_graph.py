@@ -52,9 +52,9 @@ class GraphTestCase(unittest.TestCase):
         self.assertEqual(self.e.element, 2)
 
     def test_remove_edge(self):
-        self.assertEqual(self.g._vertices[self.x][self.y].element, 2)
+        self.assertEqual(self.g.adjacency_dictionary[self.x][self.y].element, 2)
         self.g.remove_edge(self.x, self.y)
-        self.assertEqual(self.g._vertices[self.x], {})
+        self.assertEqual(self.g.adjacency_dictionary[self.x], {})
 
     def test_connecting_edges(self):
         self.assertEqual(self.g.connecting_edges(self.y), [self.e])
