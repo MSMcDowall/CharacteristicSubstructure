@@ -206,15 +206,25 @@ class CharacteristicSubstructure(object):
         pass
 
     # NOT YET IN USE
-    def find_characteristic_substructure(self, smiles_set):
+    def find_characteristic_substructure(self):
+        smiles_set = []
+        reader = open('SMILES', mode='rb')
+        for line in reader:
+            print line.rstrip()
+            smiles_set.append(line.rstrip())
+        reader.close()
+        print smiles_set
         self.find_graphs_paths(smiles_set)
         length = self.length_start
         while length >= self.length_end:
             representative_paths = self.find_representative_paths(length)
+            print representative_paths
             sorted_list = self.find_representative_structures(representative_paths)
+            print sorted_list
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
+                print 'time for adding'
                 self.add_structure_to_characteristic(sorted_list)
                 length -= self.step
             else:
@@ -222,14 +232,14 @@ class CharacteristicSubstructure(object):
 
 if __name__ == '__main__':
     path_finder = CharacteristicSubstructure(threshold=0.3)
-    print 'all paths'
-    print path_finder.find_graphs_paths(['CNO', 'CNOP', 'FSP'])
-    rep_paths = path_finder.find_representative_paths(2)
-    print 'rep paths'
-    print rep_paths
-    rep_struct = path_finder.find_representative_structures(rep_paths)
-    print 'rep struct'
-    print rep_struct
+    path_finder.find_characteristic_substructure()
+
+    # rep_paths = path_finder.find_graphs_paths([])
+    # print 'rep paths'
+    # print rep_paths
+    # rep_struct = path_finder.find_representative_structures(rep_paths)
+    # print 'rep struct'
+    # print rep_struct
 
 
 
