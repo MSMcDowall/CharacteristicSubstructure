@@ -136,6 +136,8 @@ class CharacteristicSubstructure(object):
                 path_vertices = [pair[1] for pair in mole.paths if pair[0] == path]    # Lists of path vertices
                 print 'vert in path'
                 print path_vertices
+                # for vertex_list in path_vertices:
+                #     self.create_structure(path, mole, vertex_list)
                 # If path_vertices > 1 go to special method
                 if len(path_vertices) > 0:
                     if len(path_vertices) > 1:
@@ -171,8 +173,8 @@ class CharacteristicSubstructure(object):
 if __name__ == '__main__':
     path_finder = CharacteristicSubstructure(path_threshold=0.3)
     print 'all paths'
-    print path_finder.find_graphs_paths(['CNO', 'ONC', 'CNO'])
-    rep_paths = path_finder.find_representative_paths(3)
+    print path_finder.find_graphs_paths(['C1NO1P', 'CNOP'])
+    rep_paths = path_finder.find_representative_paths(4)
     print 'rep paths'
     print rep_paths
     path_finder.find_representative_structures(rep_paths)
@@ -181,8 +183,10 @@ if __name__ == '__main__':
     for strut in path_finder.path_structures:
         print strut
         #print path_finder.path_structures[strut]
-    #draw(path_finder.path_structures.keys()[0])
-    #draw(path_finder.path_structures.keys()[1])
+    draw(path_finder.path_structures.keys()[0])
+    draw(path_finder.path_structures.keys()[1])
+    # draw(path_finder.path_structures.keys()[2])
+
 
     # tester = CharacteristicSubstructure()
     # molecule1 = Parser().parse_smiles('CNO')

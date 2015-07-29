@@ -83,10 +83,18 @@ class Graph(object):
 
     # Deletes the vertex object
     def remove_vertex(self, vertex):
-        if vertex in self._vertices:
-            # Delete the vertex object from the dictionaries of vertices which are adjacent to it
-            # del(self._vertices[adjacent].get(vertex) for adjacent in self._vertices[vertex])
-            del self._vertices[vertex]
+        # Delete the vertex object from the dictionaries of vertices which are adjacent to it
+        for neighbour in self.neighbours(vertex):
+            del self._vertices[neighbour][vertex]
+        del self._vertices[vertex]
+
+    # Swap out a vertex and replace it with the vertex object provided
+    def swap_vertex(self, old_vertex, new_vertex):
+        self._vertices[new_vertex] = self._vertices[old_vertex]
+        for neighbour in self.neighbours(old_vertex):
+            self._vertices[neighbour][new_vertex] = self._vertices[neighbour][old_vertex]
+        self.remove_vertex(old_vertex)
+
 
     # Add a weighted edge between the vertices at the two given positions
     # Method is split in two to aid in the inheritance of this method
@@ -170,5 +178,13 @@ if __name__ == '__main__':
     c = G.add_vertex('C')
     G.add_edge(a, b)
     G.add_edge(b, c)
-    print G.find_all_paths()
-    print G.paths
+    print G._vertices
+    new = Vertex('new')
+    print new
+    G.swap_vertex(b, new)
+    print 'vertices'
+    for v in G._vertices:
+        print v
+    print G.neighbours(new)
+    print G.neighbours(a)
+
