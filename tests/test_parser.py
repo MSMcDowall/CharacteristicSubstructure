@@ -1,4 +1,4 @@
-from source.parser import Parser
+from source.smiles_parser import Parser
 import source.molecule as molecule
 import unittest
 

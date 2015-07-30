@@ -1,5 +1,5 @@
 # coding=utf-8
-from parser import Parser
+from smiles_parser import Parser
 import molecule
 import subprocess
 from collections import OrderedDict
@@ -28,9 +28,9 @@ class CharacteristicSubstructure(object):
 
     def find_graphs_paths(self, smiles_set):
         for smiles in smiles_set:
-            molecule = Parser().parse_smiles(smiles)
-            self.molecules.append(molecule)
-            path_dict = molecule.find_all_paths()
+            mole = Parser().parse_smiles(smiles)
+            self.molecules.append(mole)
+            path_dict = mole.find_all_paths()
             self.paths.update(path_dict)
         return self.paths
 
@@ -48,29 +48,33 @@ class CharacteristicSubstructure(object):
 
     def create_structure(self, path, mole, vertices):
         structure = molecule.Molecule(path)
-        molecule_map = {}
+        old_molecule_map = {}           # Uses the original vertices as keys, structure vertices as values
+        new_molecule_map = {}           # Uses the structure vertices as keys, original vertices as values
         for atom in vertices:
             if isinstance(atom, molecule.Atom):
                 new_atom = structure.add_atom(atom.element)
-                molecule_map[atom] = new_atom
+                old_molecule_map[atom] = new_atom
+                new_molecule_map[new_atom] = atom
             elif isinstance(atom, molecule.AromaticAtom):
                 new_atom = structure.add_aromatic_atom(atom.element)
-                molecule_map[atom] = new_atom
+                old_molecule_map[atom] = new_atom
+                new_molecule_map[new_atom] = atom
         for atom in vertices:
             for neighbour in vertices:
                 edge = mole.contains_edge(atom, neighbour)      # Test if there is an edge to other atoms in path
                 if isinstance(edge, molecule.SingleBond):
-                    structure.add_single_bond(molecule_map[atom], molecule_map[neighbour])
+                    structure.add_single_bond(old_molecule_map[atom], old_molecule_map[neighbour])
                 elif isinstance(edge, molecule.DoubleBond):
-                    structure.add_double_bond(molecule_map[atom], molecule_map[neighbour])
+                    structure.add_double_bond(old_molecule_map[atom], old_molecule_map[neighbour])
                 elif isinstance(edge, molecule.TripleBond):
-                    structure.add_triple_bond(molecule_map[atom], molecule_map[neighbour])
+                    structure.add_triple_bond(old_molecule_map[atom], old_molecule_map[neighbour])
                 elif isinstance(edge, molecule.QuadrupleBond):
-                    structure.add_quadruple_bond(molecule_map[atom], molecule_map[neighbour])
+                    structure.add_quadruple_bond(old_molecule_map[atom], old_molecule_map[neighbour])
                 elif isinstance(edge, molecule.AromaticBond):
-                    structure.add_aromatic_bond(molecule_map[atom], molecule_map[neighbour])
-        return structure
+                    structure.add_aromatic_bond(old_molecule_map[atom], old_molecule_map[neighbour])
+        return structure, new_molecule_map
 
+    # Used for LAD isomorphism method
     def create_text(self, path_structure):
         text = [str(path_structure.size) + '\n']
         for vertex in path_structure.vertices:
@@ -181,18 +185,16 @@ class CharacteristicSubstructure(object):
                 print 'vert in path'
                 print path_vertices
                 for vertices in path_vertices:
-                    structure = self.create_structure(path, mole, vertices)
+                    structure_tuple = self.create_structure(path, mole, vertices)
+                    structure = structure_tuple[0]
+                    vertices = structure_tuple[1]
                     # Test if the structure has already been encountered - change here between LAD and nx isomorphism
                     # self.create_text(structure)
                     # self.LAD_isomorphism(structure, mole, vertices)
                     self.create_nx_graph(structure)
                     self.nx_isomorphism(structure, mole, vertices)
         for structure in self.path_structures:
-            print 'length'
-            print len(self.path_structures[structure].keys())
-            print len(self.molecules)
             relative_frequency = len(self.path_structures[structure].keys())/float(len(self.molecules))
-            print float(relative_frequency)
             if float(relative_frequency) >= self.threshold:
                 rep_structures[structure] = relative_frequency
         # Store relative frequency of each structure (induced by path in rep_paths) as value in dictionary
@@ -200,27 +202,32 @@ class CharacteristicSubstructure(object):
         representative_structures = OrderedDict(sorted(rep_structures.items(), key=lambda x: x[1], reverse=True))
         return representative_structures
 
-    # NOT YET IN USE
     def add_structure_to_characteristic(self, sorted_list):
         # Use structures stored in order of frequency to decide where it should be added to characteristic substructure
-        pass
+        # When a structure is added to the CS, any molecule that is sub isomorphic to it will have its vertices swapped
+        # These molecules will instead contain CS vertices
+        for structure in sorted_list:
+            print sorted_list[structure]
 
-    # NOT YET IN USE
+
     def find_characteristic_substructure(self):
         smiles_set = []
         reader = open('SMILES', mode='rb')
         for line in reader:
-            print line.rstrip()
             smiles_set.append(line.rstrip())
         reader.close()
         print smiles_set
         self.find_graphs_paths(smiles_set)
         length = self.length_start
         while length >= self.length_end:
+            print length
             representative_paths = self.find_representative_paths(length)
             print representative_paths
             sorted_list = self.find_representative_structures(representative_paths)
             print sorted_list
+            for key in sorted_list:
+                print key
+                draw(key)
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
@@ -231,15 +238,19 @@ class CharacteristicSubstructure(object):
                 length -= 1
 
 if __name__ == '__main__':
-    path_finder = CharacteristicSubstructure(threshold=0.3)
+    path_finder = CharacteristicSubstructure(threshold=0.3, length_start=10, length_end=3, step=1)
     path_finder.find_characteristic_substructure()
 
-    # rep_paths = path_finder.find_graphs_paths([])
+    # rep_paths = path_finder.find_graphs_paths(['CNO', 'FPS', 'CNOS'])
     # print 'rep paths'
     # print rep_paths
     # rep_struct = path_finder.find_representative_structures(rep_paths)
     # print 'rep struct'
     # print rep_struct
+    # for keys in rep_struct:
+    #     print keys
+
+
 
 
 

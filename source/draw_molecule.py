@@ -1,5 +1,5 @@
 import molecule
-import parser
+import smiles_parser
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -37,7 +37,7 @@ def draw_molecule(mole):
     return g
 
 if __name__ == '__main__':
-    mole = parser.Parser().parse_smiles('ClBrCB')
+    mole = smiles_parser.Parser().parse_smiles('ClBrCB')
     print mole.vertices
     graph = draw_molecule(mole)
 
