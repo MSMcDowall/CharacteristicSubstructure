@@ -208,6 +208,8 @@ class CharacteristicSubstructure(object):
         # These molecules will instead contain CS vertices
         for structure in sorted_list:
             print sorted_list[structure]
+            for mole in self.path_structures[structure]:
+                print self.path_structures[structure][mole]
 
 
     def find_characteristic_substructure(self):
@@ -227,7 +229,7 @@ class CharacteristicSubstructure(object):
             print sorted_list
             for key in sorted_list:
                 print key
-                draw(key)
+                # draw(key)
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
