@@ -51,7 +51,6 @@ class MoleculeTestCase(unittest.TestCase):
 
     def test_molecule_creation(self):
         self.assertEqual(self.mole.size, 2)     # Test for access to base class methods
-        self.assertEqual(self.mole.smiles_string, 'string')
 
     def test_add_atom(self):
         self.assertEqual(self.mole.vertices[0].element, 'C')

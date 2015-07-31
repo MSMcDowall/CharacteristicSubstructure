@@ -5,7 +5,7 @@ import subprocess
 from collections import OrderedDict
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
-from draw_molecule import draw_molecule as draw
+# from draw_molecule import draw_molecule as draw
 
 
 # Implementation of Finding Characteristic Substructures for Metabolite Classes
@@ -24,7 +24,7 @@ class CharacteristicSubstructure(object):
         self.path_structures = {}           # Dictionary of path structures which has record of isomorphic molecule
         self.structure_text = {}            # Text version of graph for LAD isomorphism
         self.structure_nx = {}              # NetworkX graph version of structure
-        self.multiple_structures = {}       # Dictionary of the structures which appear multiple times in molecules
+        self.multiple_structures = {}       # Dictionary of the paths which appear multiple times in molecules
 
     def find_graphs_paths(self, smiles_set):
         for smiles in smiles_set:
@@ -74,59 +74,11 @@ class CharacteristicSubstructure(object):
                     structure.add_aromatic_bond(old_molecule_map[atom], old_molecule_map[neighbour])
         return structure, new_molecule_map
 
-    # Used for LAD isomorphism method
-    def create_text(self, path_structure):
-        text = [str(path_structure.size) + '\n']
-        for vertex in path_structure.vertices:
-            for letter in vertex.element:
-                number = ord(letter)
-                text.append(str(number))
-            text.append(' ' + str(len(path_structure.neighbours(vertex))) + ' ')
-            for neighbour in path_structure.neighbours(vertex):
-                text.append(str(neighbour.position) + ' ')
-                edge = path_structure._vertices[vertex][neighbour]
-                if isinstance(edge, molecule.SingleBond):
-                    text.append('1 ')
-                elif isinstance(edge, molecule.DoubleBond):
-                    text.append('2 ')
-                elif isinstance(edge, molecule.TripleBond):
-                    text.append('3 ')
-                elif isinstance(edge, molecule.QuadrupleBond):
-                    text.append('4 ')
-                elif isinstance(edge, molecule.AromaticBond):
-                    text.append('5 ')
-            text.append('\n')
-        structure_string = ''.join(text)
-        self.structure_text[path_structure] = structure_string
-        print 'end of text'
-
-    # ERROR Treats rings as directed graph
-    def lad_isomorphism(self, pattern, mole, vertices):
-        print 'entered LAD isomorphism'
-        pattern_file = open('pattern', mode='wb')
-        pattern_file.write(self.structure_text[pattern])
-        pattern_file.close()
-
-        temporary_structure_dict = self.path_structures.copy()
-        print self.path_structures.keys()
-        print self.path_structures
-        for structure in self.path_structures.keys():
-            print' herey here'
-            target_file = open('target', mode='wb')
-            target_file.write(self.structure_text[structure])
-            target_file.close()
-            result = subprocess.check_output(["directedLAD/main", "-p", "pattern", "-t", "target", "-l", "-f"])
-            result_location = 15    # Location in the string for the flag of success, 1 for success, 0 for failure
-            print result
-            if result[result_location] == '1':   # A match has been found and the mole and vertices have been added to that entry
-                print type(self.path_structures[structure])
-                temporary_structure_dict[structure][mole] = vertices
-                print temporary_structure_dict
-                break
-        else:
-            temporary_structure_dict[pattern] = {mole: vertices}
-        self.path_structures = temporary_structure_dict.copy()
-        print self.path_structures
+    def create_multiple_structures(self):
+        # multiple_structures = {structure: mole: [[strut, vert map]...]}
+        for structure in self.multiple_structures:
+            if len(self.multiple_structures[structure]) > len(self.molecules)*self.isomorphism_factor:
+                pass
 
     def create_nx_graph(self, path_structure):
         # Create a new NetworkX graph
@@ -158,41 +110,42 @@ class CharacteristicSubstructure(object):
                                        node_match=iso.categorical_node_match('element', 'C'),
                                        edge_match=iso.categorical_edge_match('type', 'single'))
             if matcher.is_isomorphic():
-                temporary_structure_dict[structure][mole] = vertices
-                # if mole in temporary_structure_dict[structure]:
-                #     # There are multiple occurrences of structure in molecule
+                # Does the isomorphic structure already contain a reference to the current molecule?
+                # This would mean that the molecule has multiple occurrences of the same structure
+                # if mole in self.path_structures[structure]:
+                #     print 'this structure in molecule 2 times'
                 #     if structure in self.multiple_structures and mole in self.multiple_structures[structure]:
-                #         self.multiple_structures[structure][mole].append(vertices)
+                #         self.multiple_structures[structure][mole].append([pattern, vertices])
                 #     else:
-                #         self.multiple_structures[structure] = {mole: [vertices]}
-                #     # As the structure occurs multiple times we do not want to choose
-                #     del temporary_structure_dict[structure][mole]
+                #         self.multiple_structures[structure] = {mole: [[pattern, vertices]]}
+                #     print type(self.multiple_structures[structure])
+                #     print type(self.multiple_structures[structure][mole])
                 # else:
-                #     temporary_structure_dict[structure] = {mole: vertices}
+                #     print 'this structure not before in molecule'
+                temporary_structure_dict[structure][mole] = vertices
                 break
         else:
             temporary_structure_dict[pattern] = {mole: vertices}
         self.path_structures = temporary_structure_dict.copy()
-        print self.path_structures
 
     def find_representative_structures(self, rep_paths):
         rep_structures = {}
         for path in rep_paths:
             print path
             for mole in self.molecules:
-                print mole.paths
+                print 'NEW MOLECULE'
                 path_vertices = [pair[1] for pair in mole.paths if pair[0] == path]    # Lists of path vertices
-                print 'vert in path'
                 print path_vertices
                 for vertices in path_vertices:
                     structure_tuple = self.create_structure(path, mole, vertices)
                     structure = structure_tuple[0]
                     vertices = structure_tuple[1]
                     # Test if the structure has already been encountered - change here between LAD and nx isomorphism
-                    # self.create_text(structure)
-                    # self.LAD_isomorphism(structure, mole, vertices)
                     self.create_nx_graph(structure)
                     self.nx_isomorphism(structure, mole, vertices)
+        if self.multiple_structures:
+            print 'multiple thingys'
+            print self.multiple_structures
         for structure in self.path_structures:
             relative_frequency = len(self.path_structures[structure].keys())/float(len(self.molecules))
             if float(relative_frequency) >= self.threshold:
@@ -207,10 +160,12 @@ class CharacteristicSubstructure(object):
         # When a structure is added to the CS, any molecule that is sub isomorphic to it will have its vertices swapped
         # These molecules will instead contain CS vertices
         for structure in sorted_list:
-            print sorted_list[structure]
             for mole in self.path_structures[structure]:
-                print self.path_structures[structure][mole]
-
+                # print self.path_structures[structure][mole]
+                # vertex_map = self.path_structures[structure][mole]
+                # for key in vertex_map:
+                #     mole.swap_vertex(vertex_map[key], key)
+                pass
 
     def find_characteristic_substructure(self):
         smiles_set = []
@@ -218,56 +173,21 @@ class CharacteristicSubstructure(object):
         for line in reader:
             smiles_set.append(line.rstrip())
         reader.close()
-        print smiles_set
         self.find_graphs_paths(smiles_set)
         length = self.length_start
         while length >= self.length_end:
-            print length
             representative_paths = self.find_representative_paths(length)
-            print representative_paths
             sorted_list = self.find_representative_structures(representative_paths)
-            print sorted_list
-            for key in sorted_list:
-                print key
-                # draw(key)
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
-                print 'time for adding'
                 self.add_structure_to_characteristic(sorted_list)
                 length -= self.step
             else:
                 length -= 1
 
 if __name__ == '__main__':
-    path_finder = CharacteristicSubstructure(threshold=0.3, length_start=10, length_end=3, step=1)
+    path_finder = CharacteristicSubstructure(threshold=0.3, length_start=3, length_end=3, step=1)
     path_finder.find_characteristic_substructure()
-
-    # rep_paths = path_finder.find_graphs_paths(['CNO', 'FPS', 'CNOS'])
-    # print 'rep paths'
-    # print rep_paths
-    # rep_struct = path_finder.find_representative_structures(rep_paths)
-    # print 'rep struct'
-    # print rep_struct
-    # for keys in rep_struct:
-    #     print keys
-
-
-
-
-
-    # tester = CharacteristicSubstructure()
-    # molecule1 = Parser().parse_smiles('CNO')
-    # # molecule2 = Parser().parse_smiles('ONC')
-    # # molecule3 = Parser().parse_smiles('FPC')
-    # tester.create_text(molecule1)
-    # # tester.create_text(molecule2)
-    # # tester.create_text(molecule3)
-    # tester.path_structures[molecule1] = {'first': 'initial value1'}
-    # # tester.path_structures[molecule2] = {'second': 'initial value 2'}
-    # # tester.path_structures[molecule3] = {'third': 'initial value 3'}
-    # tester.LAD_isomorphism(molecule1, 'first', ['new value'])
-    # # tester.LAD_isomorphism(molecule2, 'second', ['2nd value'])
-    # # tester.LAD_isomorphism(molecule3, 'third', ['3rd value'])
 
 

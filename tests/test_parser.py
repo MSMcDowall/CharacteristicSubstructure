@@ -2,6 +2,7 @@ from source.smiles_parser import Parser
 import source.molecule as molecule
 import unittest
 
+
 class ParserTestCase(unittest.TestCase):
     # TODO Currently focused on functionality testing; add unit tests
     def setUp(self):
@@ -62,7 +63,6 @@ class ParserTestCase(unittest.TestCase):
         self.c = self.m.vertices[0]
         self.n = self.m.vertices[1]
         self.assertFalse(self.m.contains_edge(self.c, self.n))
-
 
 if __name__ == '__main__':
     unittest.main()
