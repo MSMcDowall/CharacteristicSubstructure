@@ -2,7 +2,7 @@
 from smiles_parser import Parser
 import molecule
 import subprocess
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
 # from draw_molecule import draw_molecule as draw
@@ -77,8 +77,27 @@ class CharacteristicSubstructure(object):
     def create_multiple_structures(self):
         # multiple_structures = {structure: mole: [[strut, vert map]...]}
         for structure in self.multiple_structures:
-            if len(self.multiple_structures[structure]) > len(self.molecules)*self.isomorphism_factor:
-                pass
+            # "If at least k>= 1 isomorphic subgraphs within the same molecule graph in at least |M|.iso graphs occur:"
+            # If the subgraph structure appears in |M|.iso graphs then multiple structures will be created
+            if len(self.path_structures[structure]) > len(self.molecules)*self.isomorphism_factor:
+                for mole in self.multiple_structures[structure]:
+                    k = len(self.multiple_structures[structure][mole])
+                    path = (str(structure) + ' ') * k
+                    new_structure = molecule.Molecule(path)
+                    new_structure.adjacency_dictionary.update(structure.adjacency_dictionary)
+                    new_structure.size += structure.size
+                    vertices_mapping = self.path_structures[structure][mole].copy()
+                    for pair in self.multiple_structures[structure][mole]:
+                        substructure = pair[0]
+                        new_structure.adjacency_dictionary.update(substructure.adjacency_dictionary)
+                        new_structure.size += substructure.size
+                        vertices_mapping.update(pair[1])
+                    # Remove that mole entry from path structures dictionary so it is not repeated
+                    del self.path_structures[structure][mole]
+                    # Add the new larger structure into the dictionary
+                    self.create_nx_graph(new_structure)
+                    self.nx_isomorphism(new_structure, mole, vertices_mapping)
+                    # draw(new_structure)
 
     def create_nx_graph(self, path_structure):
         # Create a new NetworkX graph
@@ -110,19 +129,16 @@ class CharacteristicSubstructure(object):
                                        node_match=iso.categorical_node_match('element', 'C'),
                                        edge_match=iso.categorical_edge_match('type', 'single'))
             if matcher.is_isomorphic():
-                # Does the isomorphic structure already contain a reference to the current molecule?
-                # This would mean that the molecule has multiple occurrences of the same structure
-                # if mole in self.path_structures[structure]:
-                #     print 'this structure in molecule 2 times'
-                #     if structure in self.multiple_structures and mole in self.multiple_structures[structure]:
-                #         self.multiple_structures[structure][mole].append([pattern, vertices])
-                #     else:
-                #         self.multiple_structures[structure] = {mole: [[pattern, vertices]]}
-                #     print type(self.multiple_structures[structure])
-                #     print type(self.multiple_structures[structure][mole])
-                # else:
-                #     print 'this structure not before in molecule'
-                temporary_structure_dict[structure][mole] = vertices
+                if mole in temporary_structure_dict[structure]:
+                    if Counter(vertices.values()) == Counter(temporary_structure_dict[structure][mole].values()):
+                        print 'same vertices'
+                        temporary_structure_dict[structure][mole] = vertices
+                    else:
+                        print 'different vertices'
+                        if structure in self.multiple_structures and mole in self.multiple_structures[structure]:
+                            self.multiple_structures[structure][mole].append([pattern, vertices])
+                        else:
+                            self.multiple_structures[structure] = {mole: [[pattern, vertices]]}
                 break
         else:
             temporary_structure_dict[pattern] = {mole: vertices}
@@ -133,9 +149,7 @@ class CharacteristicSubstructure(object):
         for path in rep_paths:
             print path
             for mole in self.molecules:
-                print 'NEW MOLECULE'
                 path_vertices = [pair[1] for pair in mole.paths if pair[0] == path]    # Lists of path vertices
-                print path_vertices
                 for vertices in path_vertices:
                     structure_tuple = self.create_structure(path, mole, vertices)
                     structure = structure_tuple[0]
@@ -144,8 +158,7 @@ class CharacteristicSubstructure(object):
                     self.create_nx_graph(structure)
                     self.nx_isomorphism(structure, mole, vertices)
         if self.multiple_structures:
-            print 'multiple thingys'
-            print self.multiple_structures
+            self.create_multiple_structures()
         for structure in self.path_structures:
             relative_frequency = len(self.path_structures[structure].keys())/float(len(self.molecules))
             if float(relative_frequency) >= self.threshold:
@@ -153,6 +166,7 @@ class CharacteristicSubstructure(object):
         # Store relative frequency of each structure (induced by path in rep_paths) as value in dictionary
         # Sort dictionary based on frequency highest to lowest
         representative_structures = OrderedDict(sorted(rep_structures.items(), key=lambda x: x[1], reverse=True))
+        print representative_structures
         return representative_structures
 
     def add_structure_to_characteristic(self, sorted_list):
