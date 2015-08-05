@@ -38,15 +38,15 @@ class GraphTestCase(unittest.TestCase):
 
     def test_clear(self):
         self.g.clear()
-        self.assertEqual(self.g.vertices, [])
+        self.assertEqual(self.g.vertices(), [])
 
     def test_add_vertex(self):
         self.assertEqual(self.y.element, 'N')
 
     def test_remove_vertex(self):
-        self.assertEqual(self.g.vertices[0].element, 'C')
+        self.assertEqual(self.g.vertices()[0].element, 'C')
         self.g.remove_vertex(self.x)
-        self.assertEqual(self.g.vertices[0].element, 'N')
+        self.assertEqual(self.g.vertices()[0].element, 'N')
 
     def test_add_edge(self):
         self.assertEqual(self.e.element, 2)

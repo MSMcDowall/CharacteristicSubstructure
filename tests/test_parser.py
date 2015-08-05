@@ -13,16 +13,16 @@ class ParserTestCase(unittest.TestCase):
 
     def test_organic(self):
         self.m = self.parser.parse_smiles('CN')
-        first = self.m.vertices[0]
-        second = self.m.vertices[1]
+        first = self.m.vertices()[0]
+        second = self.m.vertices()[1]
         self.assertEqual(first.element, 'C')
         self.assertEqual(second.element, 'N')
-        self.assertIsInstance(self.m._vertices[first][second], molecule.SingleBond)
+        self.assertIsInstance(self.m.adjacency_dictionary[first][second], molecule.SingleBond)
 
     def test_square(self):
         self.m = self.parser.parse_smiles('[12C@H2--][N@@H+3]')
-        first = self.m.vertices[0]
-        second = self.m.vertices[1]
+        first = self.m.vertices()[0]
+        second = self.m.vertices()[1]
         self.assertEqual(first.element, 'C')
         self.assertEqual(first.isotope, '12')
         self.assertEqual(first.hydrogen, '2')
@@ -30,8 +30,8 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(second.element, 'N')
         self.assertEqual(second.hydrogen, '1')
         self.assertEqual(second.charge, '+3')
-        print self.m._vertices[first]
-        self.assertIsInstance(self.m._vertices[first][second], molecule.SingleBond)
+        print self.m.adjacency_dictionary[first]
+        self.assertIsInstance(self.m.adjacency_dictionary[first][second], molecule.SingleBond)
 
     def test_aromatic(self):
         self.m = self.parser.parse_smiles('ccN')
@@ -60,8 +60,8 @@ class ParserTestCase(unittest.TestCase):
 
     def test_dot(self):
         self.m = self.parser.parse_smiles('C.N')
-        self.c = self.m.vertices[0]
-        self.n = self.m.vertices[1]
+        self.c = self.m.vertices()[0]
+        self.n = self.m.vertices()[1]
         self.assertFalse(self.m.contains_edge(self.c, self.n))
 
 if __name__ == '__main__':
