@@ -1,7 +1,7 @@
 # coding=utf-8
 from smiles_parser import Parser
 import molecule
-import subprocess
+from copy import deepcopy
 from collections import OrderedDict, Counter
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
@@ -19,9 +19,10 @@ class CharacteristicSubstructure(object):
         self.step = step
         self.threshold = threshold
         self.isomorphism_factor = isomorphism_factor
+        self.characteristic_substructure = None
         self.molecules = []                 # All the given molecules
         self.paths = {}                     # All the paths from all the molecules with their lengths
-        self.path_structures = {}           # Dictionary of path structures which has record of isomorphic molecule
+        self.path_structures = {}           # Dictionary of path structures which has record of isomorphic molecules
         self.structure_text = {}            # Text version of graph for LAD isomorphism
         self.structure_nx = {}              # NetworkX graph version of structure
         self.multiple_structures = {}       # Dictionary of the paths which appear multiple times in molecules
@@ -96,7 +97,7 @@ class CharacteristicSubstructure(object):
                     del self.path_structures[structure][mole]
                     # Add the new larger structure into the dictionary
                     self.create_nx_graph(new_structure)
-                    self.nx_isomorphism(new_structure, mole, vertices_mapping)
+                    self.check_structure_duplicates(new_structure, mole, vertices_mapping)
                     # draw(new_structure)
 
     def create_nx_graph(self, path_structure):
@@ -118,17 +119,25 @@ class CharacteristicSubstructure(object):
                 g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='aromatic')
         self.structure_nx[path_structure] = g
 
-    def nx_isomorphism(self, pattern, mole, vertices):
-        print 'entered nx isomorphism'
+    def nx_isomorphism(self,pattern, target):
+        if not nx.faster_could_be_isomorphic(pattern, target):
+                # Graphs are definitely not isomorphic
+                return False
+        matcher = iso.GraphMatcher(pattern, target,
+                                   node_match=iso.categorical_node_match('element', 'C'),
+                                   edge_match=iso.categorical_edge_match('type', 'single'))
+        if matcher.is_isomorphic():
+            return True
+        else:
+            return False
+
+    def check_structure_duplicates(self, pattern, mole, vertices):
         temporary_structure_dict = self.path_structures.copy()
         for structure in self.path_structures.keys():
-            if not nx.faster_could_be_isomorphic(self.structure_nx[pattern], self.structure_nx[structure]):
-                # Graphs are definitely not isomorphic
-                continue    # Continues to next structure for testing
-            matcher = iso.GraphMatcher(self.structure_nx[pattern], self.structure_nx[structure],
-                                       node_match=iso.categorical_node_match('element', 'C'),
-                                       edge_match=iso.categorical_edge_match('type', 'single'))
-            if matcher.is_isomorphic():
+            isomorphic = self.nx_isomorphism(self.structure_nx[pattern], self.structure_nx[structure])
+            if not isomorphic:
+                continue    # Continues to next structure for testing as they are not isomorphic
+            if isomorphic:
                 if mole in temporary_structure_dict[structure]:
                     if Counter(vertices.values()) == Counter(temporary_structure_dict[structure][mole].values()):
                         print 'same vertices'
@@ -139,6 +148,8 @@ class CharacteristicSubstructure(object):
                             self.multiple_structures[structure][mole].append([pattern, vertices])
                         else:
                             self.multiple_structures[structure] = {mole: [[pattern, vertices]]}
+                else:
+                    temporary_structure_dict[structure][mole] = vertices
                 break
         else:
             temporary_structure_dict[pattern] = {mole: vertices}
@@ -156,10 +167,13 @@ class CharacteristicSubstructure(object):
                     vertices = structure_tuple[1]
                     # Test if the structure has already been encountered - change here between LAD and nx isomorphism
                     self.create_nx_graph(structure)
-                    self.nx_isomorphism(structure, mole, vertices)
+                    self.check_structure_duplicates(structure, mole, vertices)
         if self.multiple_structures:
             self.create_multiple_structures()
         for structure in self.path_structures:
+            print 'check numbers'
+            print structure
+            print len(self.path_structures[structure].keys())
             relative_frequency = len(self.path_structures[structure].keys())/float(len(self.molecules))
             if float(relative_frequency) >= self.threshold:
                 rep_structures[structure] = relative_frequency
@@ -169,17 +183,38 @@ class CharacteristicSubstructure(object):
         print representative_structures
         return representative_structures
 
-    def add_structure_to_characteristic(self, sorted_list):
-        # Use structures stored in order of frequency to decide where it should be added to characteristic substructure
+    def add_structure_to_characteristic(self, structure):
         # When a structure is added to the CS, any molecule that is sub isomorphic to it will have its vertices swapped
         # These molecules will instead contain CS vertices
-        for structure in sorted_list:
+        if not self.characteristic_substructure:
+            self.characteristic_substructure = molecule.Molecule(str(structure))
+            self.characteristic_substructure.adjacency_dictionary.update(structure.adjacency_dictionary)
+            self.characteristic_substructure.size = structure.size
+            print 'CS made'
+            print self.characteristic_substructure.adjacency_dictionary
+        elif self.characteristic_substructure:
+            possible_cs = {}    # List of possible locations of subgraphs
             for mole in self.path_structures[structure]:
-                # print self.path_structures[structure][mole]
-                # vertex_map = self.path_structures[structure][mole]
-                # for key in vertex_map:
-                #     mole.swap_vertex(vertex_map[key], key)
-                pass
+                cs_vertices = [vertex for vertex in mole.adjacency_dictionary.keys()    # Overlap between molecule & CS
+                               if vertex in self.characteristic_substructure.adjacency_dictionary.keys()]
+                possible = deepcopy(self.characteristic_substructure)
+                print possible
+                print cs_vertices
+                print 'CS'
+                # Does structure vertices contain any from cs vertices?
+                # For vertices in structure not in CS
+                # Add to CS also append bonds for structure vertices
+
+        for mole in self.path_structures[structure]:
+            print self.path_structures[structure][mole]
+            print self.path_structures[structure][mole]
+            vertex_map = self.path_structures[structure][mole]
+            for key in vertex_map:
+                # If this vertex of the structure has been added to the CS
+                if key in self.characteristic_substructure.adjacency_dictionary:
+                    # Change the vertices in the molecule
+                    mole.swap_vertex(vertex_map[key], key)
+
 
     def find_characteristic_substructure(self):
         smiles_set = []
@@ -195,7 +230,12 @@ class CharacteristicSubstructure(object):
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
-                self.add_structure_to_characteristic(sorted_list)
+                print 'list'
+                print sorted_list
+                for structure in sorted_list:
+                    print 'sorted'
+                    print structure
+                    self.add_structure_to_characteristic(structure)
                 length -= self.step
             else:
                 length -= 1
