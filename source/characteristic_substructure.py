@@ -133,28 +133,31 @@ class CharacteristicSubstructure(object):
             return False
 
     def check_structure_duplicates(self, pattern, mole, vertices):
-        temporary_structure_dict = self.path_structures.copy()
         for structure in self.path_structures.keys():
             isomorphic = self.nx_isomorphism(self.structure_nx[pattern], self.structure_nx[structure])
             if not isomorphic:
                 continue    # Continues to next structure for testing as they are not isomorphic
             if isomorphic:
-                if mole in temporary_structure_dict[structure]:
-                    if Counter(vertices.values()) == Counter(temporary_structure_dict[structure][mole].values()):
-                        print 'same vertices'
-                        temporary_structure_dict[structure][mole] = vertices
-                    else:
+                if mole in self.path_structures[structure]:
+                    if Counter(vertices.values()) != Counter(self.path_structures[structure][mole].values()):
                         print 'different vertices'
                         if structure in self.multiple_structures and mole in self.multiple_structures[structure]:
                             self.multiple_structures[structure][mole].append([pattern, vertices])
                         else:
                             self.multiple_structures[structure] = {mole: [[pattern, vertices]]}
+                    continue
+                if structure in self.isomorphic_structures:
+                    self.isomorphic_structures[structure].append(pattern)
                 else:
-                    temporary_structure_dict[structure][mole] = vertices
+                    continue
                 break
         else:
-            temporary_structure_dict[pattern] = {mole: vertices}
-        self.path_structures = temporary_structure_dict.copy()
+            self.isomorphic_structures[pattern] = []
+        print 'duplicates'
+        print pattern
+        print repr(pattern)
+        print self.isomorphic_structures
+        self.path_structures[pattern] = {mole: vertices}
 
     def find_representative_structures(self, rep_paths):
         rep_structures = {}
@@ -165,10 +168,6 @@ class CharacteristicSubstructure(object):
                 for vertices in path_vertices:
                     structure_tuple = self.create_structure(path, mole, vertices)
                     structure = structure_tuple[0]
-                    print 'new structure'
-                    print mole
-                    print structure
-                    print structure.adjacency_dictionary.keys()
                     vertices = structure_tuple[1]
                     # Test if the structure has already been encountered - change here between LAD and nx isomorphism
                     self.create_nx_graph(structure)
@@ -176,16 +175,12 @@ class CharacteristicSubstructure(object):
         if self.multiple_structures:
             self.create_multiple_structures()
         for structure in self.path_structures:
-            print 'check numbers'
-            print structure
-            print len(self.path_structures[structure].keys())
             relative_frequency = len(self.path_structures[structure].keys())/float(len(self.molecules))
             if float(relative_frequency) >= self.threshold:
                 rep_structures[structure] = relative_frequency
         # Store relative frequency of each structure (induced by path in rep_paths) as value in dictionary
         # Sort dictionary based on frequency highest to lowest
         representative_structures = OrderedDict(sorted(rep_structures.items(), key=lambda x: x[1], reverse=True))
-        print representative_structures
         return representative_structures
 
     def swap_path_structure(self, old, new):
@@ -245,15 +240,16 @@ class CharacteristicSubstructure(object):
         while length >= self.length_end:
             representative_paths = self.find_representative_paths(length)
             sorted_list = self.find_representative_structures(representative_paths)
+            print self.isomorphic_structures
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
-                print 'list'
-                print sorted_list
-                for structure in sorted_list:
-                    print 'sorted'
-                    print structure
-                    self.add_structure_to_characteristic(structure)
+                # print 'list'
+                # print sorted_list
+                # for structure in sorted_list:
+                #     print 'sorted'
+                #     print structure
+                #     self.add_structure_to_characteristic(structure)
                 length -= self.step
             else:
                 length -= 1
