@@ -73,7 +73,7 @@ class AromaticBond(graph.Edge):
 class Molecule(graph.Graph):
     def __init__(self, smiles):
         graph.Graph.__init__(self)
-        self._smiles_string = smiles        # The original SMILES string
+        self._smiles_string = smiles        # The original SMILES.txt string
 
     # Return the original SMILES string
     def __str__(self):

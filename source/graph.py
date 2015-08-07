@@ -93,7 +93,6 @@ class Graph(object):
             self.adjacency_dictionary[neighbour][new_vertex] = self.adjacency_dictionary[neighbour][old_vertex]
         self.remove_vertex(old_vertex)
 
-
     # Add a weighted edge between the vertices at the two given positions
     # Method is split in two to aid in the inheritance of this method
     def add_edge(self, first_vertex, second_vertex, element=None):
@@ -185,4 +184,3 @@ if __name__ == '__main__':
         print v
     print G.neighbours(new)
     print G.neighbours(a)
-

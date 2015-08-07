@@ -86,7 +86,7 @@ class Parser(object):
         else:
             atom = mole.add_atom(d['organic'])
             self.add_bond(atom, mole)
-        # Before moving to the next part of the SMILES string set this atom as the previous atom
+        # Before moving to the next part of the SMILES.txt string set this atom as the previous atom
         self._previous_atom = atom
 
     # Adds a bond to the molecule and if a bond symbol has been encountered it tests the type
