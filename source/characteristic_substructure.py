@@ -126,7 +126,7 @@ class CharacteristicSubstructure(object):
     def nx_isomorphism(self,pattern, target):
         if not nx.faster_could_be_isomorphic(pattern, target):
                 # Graphs are definitely not isomorphic
-                return False
+                return None
         matcher = iso.GraphMatcher(pattern, target,
                                    node_match=iso.categorical_node_match('element', 'C'),
                                    edge_match=iso.categorical_edge_match('type', 'single'))
@@ -222,19 +222,36 @@ class CharacteristicSubstructure(object):
             self.characteristic_substructure = copy(structure)
             print 'CS made'
             print self.characteristic_substructure.adjacency_dictionary
-        # elif self.characteristic_substructure:
-        #     print 'CHARACTERISTIC SUBSTRUCTURE'
-        #     possible_locations = {}    # List of possible locations of subgraphs
-        #     for mole in self.path_structures[structure]:
-        #         cs_vertices = [vertex for vertex in mole.adjacency_dictionary.keys()    # Overlap between molecule & CS
-        #                        if vertex in self.characteristic_substructure.adjacency_dictionary.keys()]
-        #         possible_location = copy(self.characteristic_substructure)
-        #         print possible_location.adjacency_dictionary
+        elif self.characteristic_substructure:
+            print 'CHARACTERISTIC SUBSTRUCTURE'
+            possible_locations = []    # List of possible locations of subgraphs
+            for mole in self.path_structures[structure]:
+                cs_vertices = [vertex for vertex in mole.adjacency_dictionary.keys()    # Overlap between molecule & CS
+                               if vertex in self.characteristic_substructure.adjacency_dictionary.keys()]
+                possible_location = copy(self.characteristic_substructure)
+                print possible_location.adjacency_dictionary
                 # Does structure vertices contain any from cs vertices?
                 # For vertices in structure not in CS
                 # Add to CS also append bonds for structure vertices
-        # Compare the frequency of possible locations
-        # Isomorphism algorithm
+                for vertex in structure.adjacency_dictionary:
+                    if vertex in possible_location.adjacency_dictionary:
+                        possible_location.adjacency_dictionary[vertex].append(structure.adjacency_dictionary[vertex])
+                    else:
+                        possible_location.adjacency_dictionary[vertex] = structure.adjacency_dictionary[vertex]
+                        possible_location.size += 1
+                possible_locations.append(possible_location)
+            for possible in possible_locations:
+                self.create_nx_graph(possible)
+            isomorphic_locations = {}
+            for possible in possible_locations:
+                for location in isomorphic_locations:
+                    if self.nx_isomorphism(possible, location):
+                        isomorphic_locations[location] += 1
+                        break
+                else:
+                    isomorphic_locations[possible] = 1
+            sorted_locations = OrderedDict(sorted(isomorphic_locations.items(), key=lambda x: x[1], reverse=True))
+            self.characteristic_substructure = sorted_locations.items()[0][0]
         print 'CS vertices'
         print self.characteristic_substructure.adjacency_dictionary.keys()
         for mole in self.path_structures[structure]:
@@ -265,18 +282,15 @@ class CharacteristicSubstructure(object):
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
-                # print 'list'
-                # print sorted_list
-                # for structure in sorted_list:
-                #     print 'sorted'
-                #     print structure
-                #     self.add_structure_to_characteristic(structure)
+                print 'list'
+                for structure in sorted_list:
+                    self.add_structure_to_characteristic(structure)
                 length -= self.step
             else:
                 length -= 1
 
 if __name__ == '__main__':
-    path_finder = CharacteristicSubstructure(threshold=0.3, length_start=3, length_end=3, step=1, isomorphism_factor=0.2)
+    path_finder = CharacteristicSubstructure(threshold=0.3, length_start=3, length_end=3, step=1)
     path_finder.find_characteristic_substructure()
 
 
