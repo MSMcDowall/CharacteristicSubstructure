@@ -23,7 +23,7 @@ class CharacteristicSubstructure(object):
         self.molecules = []                 # All the given molecules
         self.paths = {}                     # All the paths from all the molecules with their lengths
         self.path_structures = {}           # Dictionary of path structures which has record of isomorphic molecules
-        self.isomorphic_structures = {}     # Dictionary of all the structures which are isomorphic to one another
+        # self.isomorphic_structures = {}     # Dictionary of all the structures which are isomorphic to one another
         self.structure_text = {}            # Text version of graph for LAD isomorphism
         self.structure_nx = {}              # NetworkX graph version of structure
         self.multiple_structures = {}       # Dictionary of the paths which appear multiple times in molecules
@@ -91,6 +91,9 @@ class CharacteristicSubstructure(object):
                     vertices_mapping = self.path_structures[structure][mole].copy()
                     for pair in self.multiple_structures[structure][mole]:
                         substructure = pair[0]
+                        # Ensure positions in the structure are unique so they can be used with the nx graph
+                        for vertex in substructure.adjacency_dictionary:
+                            vertex.position += new_structure.size
                         new_structure.adjacency_dictionary.update(substructure.adjacency_dictionary)
                         new_structure.size += substructure.size
                         vertices_mapping.update(pair[1])
@@ -128,36 +131,53 @@ class CharacteristicSubstructure(object):
                                    node_match=iso.categorical_node_match('element', 'C'),
                                    edge_match=iso.categorical_edge_match('type', 'single'))
         if matcher.is_isomorphic():
-            return True
-        else:
-            return False
+            return matcher.mapping
 
     def check_structure_duplicates(self, pattern, mole, vertices):
+        temporary_structure_dict = self.path_structures.copy()
         for structure in self.path_structures.keys():
-            isomorphic = self.nx_isomorphism(self.structure_nx[pattern], self.structure_nx[structure])
-            if not isomorphic:
+            isomorphic_mapping = self.nx_isomorphism(self.structure_nx[pattern], self.structure_nx[structure])
+            if not isomorphic_mapping:
                 continue    # Continues to next structure for testing as they are not isomorphic
-            if isomorphic:
-                if mole in self.path_structures[structure]:
-                    if Counter(vertices.values()) != Counter(self.path_structures[structure][mole].values()):
+            if isomorphic_mapping:
+                if mole in temporary_structure_dict[structure]:
+                    # If the molecule vertices are different to the vertices currently in dictionary
+                    # then there are multiple subgraphs in molecule isomorphic to pattern
+                    if Counter(vertices.values()) != Counter(temporary_structure_dict[structure][mole].values()):
                         print 'different vertices'
                         if structure in self.multiple_structures and mole in self.multiple_structures[structure]:
                             self.multiple_structures[structure][mole].append([pattern, vertices])
                         else:
                             self.multiple_structures[structure] = {mole: [[pattern, vertices]]}
-                    continue
-                if structure in self.isomorphic_structures:
-                    self.isomorphic_structures[structure].append(pattern)
                 else:
-                    continue
+                    altered_mapping = {}
+                    print isomorphic_mapping
+                    for g2_position in isomorphic_mapping:
+                        print 'o we got in did we'
+                        print g2_position
+                        for vertex in structure.adjacency_dictionary:
+                            if vertex.position == g2_position:
+                                g2_match = vertex
+                                print g2_match
+                                break
+                        print isomorphic_mapping[g2_position]
+                        for vertex in pattern.adjacency_dictionary:
+                            if vertex.position == isomorphic_mapping[g2_position]:
+                                # find molecule vertex in 'vertices' which maps to this vertex
+                                print 'vertex'
+                                print vertex
+                                mole_vertex = vertices[vertex]
+                                print mole_vertex
+                                break
+                        altered_mapping[g2_match] = mole_vertex
+                    print structure.adjacency_dictionary.keys()
+                    print mole.adjacency_dictionary.keys()
+                    print altered_mapping
+                    temporary_structure_dict[structure][mole] = altered_mapping
                 break
         else:
-            self.isomorphic_structures[pattern] = []
-        print 'duplicates'
-        print pattern
-        print repr(pattern)
-        print self.isomorphic_structures
-        self.path_structures[pattern] = {mole: vertices}
+            temporary_structure_dict[pattern] = {mole: vertices}
+        self.path_structures = temporary_structure_dict.copy()
 
     def find_representative_structures(self, rep_paths):
         rep_structures = {}
@@ -172,7 +192,9 @@ class CharacteristicSubstructure(object):
                     # Test if the structure has already been encountered - change here between LAD and nx isomorphism
                     self.create_nx_graph(structure)
                     self.check_structure_duplicates(structure, mole, vertices)
+        print self.path_structures
         if self.multiple_structures:
+            print 'multiple structures'
             self.create_multiple_structures()
         for structure in self.path_structures:
             relative_frequency = len(self.path_structures[structure].keys())/float(len(self.molecules))
@@ -240,7 +262,6 @@ class CharacteristicSubstructure(object):
         while length >= self.length_end:
             representative_paths = self.find_representative_paths(length)
             sorted_list = self.find_representative_structures(representative_paths)
-            print self.isomorphic_structures
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
@@ -255,7 +276,7 @@ class CharacteristicSubstructure(object):
                 length -= 1
 
 if __name__ == '__main__':
-    path_finder = CharacteristicSubstructure(threshold=0.3, length_start=3, length_end=3, step=1)
+    path_finder = CharacteristicSubstructure(threshold=0.3, length_start=3, length_end=3, step=1, isomorphism_factor=0.2)
     path_finder.find_characteristic_substructure()
 
 
