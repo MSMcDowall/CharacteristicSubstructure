@@ -312,6 +312,6 @@ class CharacteristicSubstructure(object):
                         self.path_structures[structure][molecule][vertex] = new
 
 if __name__ == '__main__':
-    path_finder = CharacteristicSubstructure(threshold=0.3)
+    path_finder = CharacteristicSubstructure(threshold=0.3, length_end=3)
     structure = path_finder.find_characteristic_substructure()
     print structure

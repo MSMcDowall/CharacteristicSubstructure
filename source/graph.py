@@ -92,6 +92,8 @@ class Graph(object):
     def swap_vertex(self, old_vertex, new_vertex):
         self.adjacency_dictionary[new_vertex] = copy.copy(self.adjacency_dictionary[old_vertex])
         for neighbour in self.neighbours(old_vertex):
+            print self.adjacency_dictionary[neighbour]
+            print self.adjacency_dictionary[neighbour][old_vertex]
             self.adjacency_dictionary[neighbour][new_vertex] = copy.copy(self.adjacency_dictionary[neighbour][old_vertex])
         self.remove_vertex(old_vertex)
 
