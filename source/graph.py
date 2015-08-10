@@ -1,3 +1,5 @@
+import copy
+
 # A single Vertex of Graph which includes its element
 class Vertex(object):
     def __init__(self, element):
@@ -88,9 +90,9 @@ class Graph(object):
 
     # Swap out a vertex and replace it with the vertex object provided
     def swap_vertex(self, old_vertex, new_vertex):
-        self.adjacency_dictionary[new_vertex] = self.adjacency_dictionary[old_vertex]
+        self.adjacency_dictionary[new_vertex] = copy.copy(self.adjacency_dictionary[old_vertex])
         for neighbour in self.neighbours(old_vertex):
-            self.adjacency_dictionary[neighbour][new_vertex] = self.adjacency_dictionary[neighbour][old_vertex]
+            self.adjacency_dictionary[neighbour][new_vertex] = copy.copy(self.adjacency_dictionary[neighbour][old_vertex])
         self.remove_vertex(old_vertex)
 
     # Add a weighted edge between the vertices at the two given positions
@@ -131,6 +133,9 @@ class Graph(object):
 
     # Tests if there is an edge between the two vertices
     def contains_edge(self, first_vertex, second_vertex):
+        print repr(first_vertex)
+        print self.adjacency_dictionary.keys()
+        print self.adjacency_dictionary[first_vertex]
         if second_vertex in self.adjacency_dictionary[first_vertex]:
             return self.adjacency_dictionary[first_vertex][second_vertex]
         else:

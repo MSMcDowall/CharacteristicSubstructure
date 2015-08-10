@@ -22,6 +22,9 @@ class Atom(graph.Vertex):
     def __str__(self):
         return 'Atom element %s at position %s' % (self.element, self.position)
 
+    def __repr__(self):
+        return '<Atom %s at %s>' % (self.element, id(self))
+
 
 # Represents an aromatic atom and inherits the chemical properties that are present in an atom
 class AromaticAtom(Atom):
@@ -31,6 +34,8 @@ class AromaticAtom(Atom):
     def __str__(self):
         return 'Aromatic element %s at position %s' % (self.element, self.position)
 
+    def __repr__(self):
+        return '<Aromatic Atom %s at %s>' % (self.element, id(self))
 
 class SingleBond(graph.Edge):
     def __init__(self, origin, destination):
@@ -78,6 +83,9 @@ class Molecule(graph.Graph):
     # Return the original SMILES string
     def __str__(self):
         return self._smiles_string
+
+    def __repr__(self):
+        return '<Molecule %s at %s>' % (str(self), id(self))
 
     def add_atom(self, element, isotope=None, hydrogen=None, charge=None):
         new_atom = Atom(element, isotope, hydrogen, charge)

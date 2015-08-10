@@ -71,5 +71,11 @@ class GraphTestCase(unittest.TestCase):
         self.assertTrue(self.g.contains_edge(self.x, self.z))
         self.assertFalse(self.g.contains_edge(self.y, self.z))
 
+    def test_swap_vertex(self):
+        pass
+
+    def find_all_paths(self):
+        self.new = graph.Vertex('O')
+
 if __name__ == '__main__':
     unittest.main()
