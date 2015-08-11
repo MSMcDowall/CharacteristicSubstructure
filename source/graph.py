@@ -1,4 +1,5 @@
 import copy
+#from draw_molecule import draw_molecule as draw
 
 # A single Vertex of Graph which includes its element
 class Vertex(object):
@@ -91,8 +92,18 @@ class Graph(object):
     # Swap out a vertex and replace it with the vertex object provided
     def swap_vertex(self, old_vertex, new_vertex):
         self.adjacency_dictionary[new_vertex] = copy.copy(self.adjacency_dictionary[old_vertex])
+        print 'in swapping'
+        print self.adjacency_dictionary
+        # draw(self)
+        print 'neighbours of next'
+        print repr(old_vertex)
+        print self.neighbours(old_vertex)
         for neighbour in self.neighbours(old_vertex):
+            print 'neighbour'
+            print repr(neighbour)
+            print self.neighbours(neighbour)
             self.adjacency_dictionary[neighbour][new_vertex] = copy.copy(self.adjacency_dictionary[neighbour][old_vertex])
+
         # Change any instances where the old vertex appears in the list of paths
         if self.paths:
             path_copy = copy.copy(self.paths)
@@ -123,12 +134,12 @@ class Graph(object):
         del self.adjacency_dictionary[first_vertex][second_vertex]
         del self.adjacency_dictionary[second_vertex][first_vertex]
 
-    # Create a printable string version of each vertex dictionary
-    def dictionary_string(self, vertex):
-        dictionary_string = {}
-        for key, value in self.adjacency_dictionary[vertex].iteritems():
-            dictionary_string[str(key)] = str(value)
-        return dictionary_string
+    # # Create a printable string version of each vertex dictionary
+    # def dictionary_string(self, vertex):
+    #     dictionary_string = {}
+    #     for key, value in self.adjacency_dictionary[vertex].iteritems():
+    #         dictionary_string[str(key)] = str(value)
+    #     return dictionary_string
 
     # Returns all the vertices which are adjacent to the vertex
     def neighbours(self, vertex):
