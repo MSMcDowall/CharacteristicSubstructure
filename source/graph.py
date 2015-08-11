@@ -92,9 +92,18 @@ class Graph(object):
     def swap_vertex(self, old_vertex, new_vertex):
         self.adjacency_dictionary[new_vertex] = copy.copy(self.adjacency_dictionary[old_vertex])
         for neighbour in self.neighbours(old_vertex):
-            print self.adjacency_dictionary[neighbour]
-            print self.adjacency_dictionary[neighbour][old_vertex]
             self.adjacency_dictionary[neighbour][new_vertex] = copy.copy(self.adjacency_dictionary[neighbour][old_vertex])
+        # Change any instances where the old vertex appears in the list of paths
+        if self.paths:
+            path_copy = copy.copy(self.paths)
+            for path_tuple in self.paths:
+                if old_vertex in path_tuple[1]:
+                    tuple_index = self.paths.index(path_tuple)
+                    vertex_index = path_tuple[1].index(old_vertex)
+                    vertices_list = copy.copy(path_tuple[1])
+                    vertices_list[vertex_index] = new_vertex
+                    path_copy[tuple_index] = (path_tuple[0], vertices_list)
+            self.paths = copy.copy(path_copy)
         self.remove_vertex(old_vertex)
 
     # Add a weighted edge between the vertices at the two given positions
@@ -135,9 +144,6 @@ class Graph(object):
 
     # Tests if there is an edge between the two vertices
     def contains_edge(self, first_vertex, second_vertex):
-        print repr(first_vertex)
-        print self.adjacency_dictionary.keys()
-        print self.adjacency_dictionary[first_vertex]
         if second_vertex in self.adjacency_dictionary[first_vertex]:
             return self.adjacency_dictionary[first_vertex][second_vertex]
         else:

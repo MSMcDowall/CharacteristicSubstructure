@@ -51,8 +51,13 @@ class CharacteristicSubstructure(object):
         for path in rep_paths:
             # print path
             for mole in self.molecules:
+                print 'mole to be structured'
+                print str(mole)
+                print mole.adjacency_dictionary.keys()
                 path_vertices = [pair[1] for pair in mole.paths if pair[0] == path]    # Lists of path vertices
                 for vertices in path_vertices:
+                    print 'path vertices'
+                    print vertices
                     structure_tuple = self._create_structure(path, mole, vertices)
                     structure = structure_tuple[0]
                     vertices = structure_tuple[1]
@@ -77,12 +82,12 @@ class CharacteristicSubstructure(object):
         length = self.length_start
         while length >= self.length_end:
             representative_paths = self.find_representative_paths(length)
+            print 'found representative paths'
             sorted_list = self.find_representative_structures(representative_paths)
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
                 print 'sorted list of representative structures'
-                print sorted_list
                 for structure in sorted_list:
                     # draw(structure)
                     self._add_structure_to_characteristic(structure)
@@ -114,9 +119,6 @@ class CharacteristicSubstructure(object):
                 # If they do then change them to the CS vertices
                 for vertex in self.path_structures[structure][mole]:
                     print 'switching out copy of structure'
-                    print repr(vertex)
-                    print structure_copy.adjacency_dictionary[vertex]
-                    print structure_copy.adjacency_dictionary.keys()
                     if self.path_structures[structure][mole][vertex] in self.characteristic_substructure.adjacency_dictionary:
                         structure_copy.swap_vertex(vertex, self.path_structures[structure][mole][vertex])
                     print 'successful switch'
