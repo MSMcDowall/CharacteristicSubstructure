@@ -92,18 +92,8 @@ class Graph(object):
     # Swap out a vertex and replace it with the vertex object provided
     def swap_vertex(self, old_vertex, new_vertex):
         self.adjacency_dictionary[new_vertex] = copy.copy(self.adjacency_dictionary[old_vertex])
-        print 'in swapping'
-        print self.adjacency_dictionary
-        # draw(self)
-        print 'neighbours of next'
-        print repr(old_vertex)
-        print self.neighbours(old_vertex)
         for neighbour in self.neighbours(old_vertex):
-            print 'neighbour'
-            print repr(neighbour)
-            print self.neighbours(neighbour)
             self.adjacency_dictionary[neighbour][new_vertex] = copy.copy(self.adjacency_dictionary[neighbour][old_vertex])
-
         # Change any instances where the old vertex appears in the list of paths
         if self.paths:
             path_copy = copy.copy(self.paths)

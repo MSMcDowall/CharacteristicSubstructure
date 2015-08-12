@@ -2,10 +2,10 @@
 from smiles_parser import Parser
 import molecule as m
 from collections import OrderedDict, Counter
-from copy import copy
+from copy import copy, deepcopy
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
-from draw_molecule import draw_molecule as draw
+#from draw_molecule import draw_molecule as draw
 
 
 # Implementation of Finding Characteristic Substructures for Metabolite Classes
@@ -29,7 +29,7 @@ class CharacteristicSubstructure(object):
     def find_graphs_paths(self, smiles_set):
         for smiles in smiles_set:
             mole = Parser().parse_smiles(smiles)
-            draw(mole)
+            #draw(mole)
             self.molecules.append(mole)
             path_dict = mole.find_all_paths()
             self.paths.update(path_dict)
@@ -90,9 +90,14 @@ class CharacteristicSubstructure(object):
                 print 'sorted list of representative structures'
                 print sorted_list
                 self.characteristic_substructure = copy(sorted_list[0])
+                print 'lets swap CS'
                 self._swap_molecule_vertices(sorted_list[0])
                 for structure in sorted_list[1:]:
+                    print 'adding more to CS'
+                    print self.path_structures[structure]
                     self._add_structure_to_characteristic(structure)
+                    print 'edited new cs struct'
+                    print self.path_structures[structure]
                     self._swap_molecule_vertices(structure)
                 length -= self.step
             else:
@@ -104,7 +109,8 @@ class CharacteristicSubstructure(object):
         for mole in self.path_structures[structure]:
             # Create copy of the structure so that changes can be made without altering original structure
             structure_copy = m.Molecule(str(structure))
-            structure_copy.adjacency_dictionary = structure.adjacency_dictionary.copy()
+            for key in structure.adjacency_dictionary:
+                structure_copy.adjacency_dictionary[key] = structure.adjacency_dictionary[key].copy()
             # Does structure vertices map to any CS vertices?
             # If they do then change them to the CS vertices
             for vertex in self.path_structures[structure][mole]:
@@ -112,7 +118,8 @@ class CharacteristicSubstructure(object):
                     structure_copy.swap_vertex(vertex, self.path_structures[structure][mole][vertex])
             # Create a copy of the characteristic substructure which will have the structure added to it
             possible_location = m.Molecule(str(self.characteristic_substructure))
-            possible_location.adjacency_dictionary = self.characteristic_substructure.adjacency_dictionary.copy()
+            for key in self.characteristic_substructure.adjacency_dictionary:
+                possible_location.adjacency_dictionary[key] = self.characteristic_substructure.adjacency_dictionary[key].copy()
             # For vertices in structure not in CS
             # Add to CS also append bonds for structure vertices
             for vertex in structure_copy.adjacency_dictionary:
@@ -211,11 +218,12 @@ class CharacteristicSubstructure(object):
                 g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='aromatic')
         self.structure_nx[path_structure] = g
 
-    def _nx_isomorphism(self,pattern, target):
-        if not nx.faster_could_be_isomorphic(pattern, target):
+    def _nx_isomorphism(self, pattern, target):
+        # Error calling without making structure
+        if not nx.faster_could_be_isomorphic(self.structure_nx[pattern], self.structure_nx[target]):
                 # Graphs are definitely not isomorphic
                 return None
-        matcher = iso.GraphMatcher(pattern, target,
+        matcher = iso.GraphMatcher(self.structure_nx[pattern], self.structure_nx[target],
                                    node_match=iso.categorical_node_match('element', 'C'),
                                    edge_match=iso.categorical_edge_match('type', 'single'))
         if matcher.is_isomorphic():
@@ -224,7 +232,7 @@ class CharacteristicSubstructure(object):
     def _check_structure_duplicates(self, pattern, mole, vertices):
         temporary_structure_dict = self.path_structures.copy()
         for structure in self.path_structures.keys():
-            isomorphic_mapping = self._nx_isomorphism(self.structure_nx[pattern], self.structure_nx[structure])
+            isomorphic_mapping = self._nx_isomorphism(pattern, structure)
             if not isomorphic_mapping:
                 continue    # Continues to next structure for testing as they are not isomorphic
             if isomorphic_mapping:
@@ -266,18 +274,12 @@ class CharacteristicSubstructure(object):
         pass
 
     def _swap_molecule_vertices(self, structure):
-        print 'into swap'
-        print structure.adjacency_dictionary
         for mole in self.path_structures[structure]:
-            draw(mole)
-            print 'new mole'
             for key in self.path_structures[structure][mole]:
                 # If this vertex of the structure has been added to the CS
                 # then change the molecule that are associated with it
                 if key in self.characteristic_substructure.adjacency_dictionary.keys():
                     # Change the vertices in the molecule
-                    # ERROR old_vertex invalid key
-                    draw(mole)
                     mole.swap_vertex(self.path_structures[structure][mole][key], key)
                     self._swap_path_structure(self.path_structures[structure][mole][key], key)
 
@@ -290,6 +292,6 @@ class CharacteristicSubstructure(object):
                         self.path_structures[structure][molecule][vertex] = new
 
 if __name__ == '__main__':
-    path_finder = CharacteristicSubstructure(threshold=0.3, length_end=3)
-    structure = path_finder.find_characteristic_substructure()
-    print structure
+    path_finder = CharacteristicSubstructure(threshold=0.3)
+    struct = path_finder.find_characteristic_substructure()
+    print struct
