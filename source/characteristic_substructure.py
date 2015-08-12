@@ -56,7 +56,6 @@ class CharacteristicSubstructure(object):
             for mole in self.molecules:
                 print 'mole to be structured'
                 print str(mole)
-                print mole.adjacency_dictionary.keys()
                 path_vertices = [pair[1] for pair in mole.paths if pair[0] == path]    # Lists of path vertices
                 for vertices in path_vertices:
                     structure_tuple = self._create_structure(path, mole, vertices)
@@ -88,16 +87,13 @@ class CharacteristicSubstructure(object):
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
                 print 'sorted list of representative structures'
-                print sorted_list
                 self.characteristic_substructure = copy(sorted_list[0])
                 print 'lets swap CS'
                 self._swap_molecule_vertices(sorted_list[0])
                 for structure in sorted_list[1:]:
                     print 'adding more to CS'
-                    print self.path_structures[structure]
                     self._add_structure_to_characteristic(structure)
                     print 'edited new cs struct'
-                    print self.path_structures[structure]
                     self._swap_molecule_vertices(structure)
                 length -= self.step
             else:
@@ -109,17 +105,22 @@ class CharacteristicSubstructure(object):
         for mole in self.path_structures[structure]:
             # Create copy of the structure so that changes can be made without altering original structure
             structure_copy = m.Molecule(str(structure))
-            for key in structure.adjacency_dictionary:
-                structure_copy.adjacency_dictionary[key] = structure.adjacency_dictionary[key].copy()
+            for vertex in structure.adjacency_dictionary:
+                structure_copy.adjacency_dictionary[vertex] = {}
+                for neighbour in structure.adjacency_dictionary[vertex]:
+                    structure_copy.adjacency_dictionary[vertex][neighbour] = copy(structure.adjacency_dictionary[vertex][neighbour])
             # Does structure vertices map to any CS vertices?
             # If they do then change them to the CS vertices
             for vertex in self.path_structures[structure][mole]:
                 if self.path_structures[structure][mole][vertex] in self.characteristic_substructure.adjacency_dictionary:
+                    # SWAP VERTEX ERROR HERE
                     structure_copy.swap_vertex(vertex, self.path_structures[structure][mole][vertex])
             # Create a copy of the characteristic substructure which will have the structure added to it
             possible_location = m.Molecule(str(self.characteristic_substructure))
-            for key in self.characteristic_substructure.adjacency_dictionary:
-                possible_location.adjacency_dictionary[key] = self.characteristic_substructure.adjacency_dictionary[key].copy()
+            for vertex in self.characteristic_substructure.adjacency_dictionary:
+                possible_location.adjacency_dictionary[vertex] = {}
+                for neighbour in self.characteristic_substructure.adjacency_dictionary[vertex]:
+                    possible_location.adjacency_dictionary[vertex][neighbour] = copy(self.characteristic_substructure.adjacency_dictionary[vertex][neighbour])
             # For vertices in structure not in CS
             # Add to CS also append bonds for structure vertices
             for vertex in structure_copy.adjacency_dictionary:
@@ -143,6 +144,9 @@ class CharacteristicSubstructure(object):
 
 
     def _create_structure(self, path, mole, vertices):
+        print 'into create structure'
+        print repr(mole)
+        print mole.adjacency_dictionary.keys()
         structure = m.Molecule(path)
         old_molecule_map = {}           # Uses the original vertices as keys, structure vertices as values
         new_molecule_map = {}           # Uses the structure vertices as keys, original vertices as values

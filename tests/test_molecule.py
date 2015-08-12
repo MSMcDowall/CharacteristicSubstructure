@@ -76,10 +76,10 @@ class MoleculeTestCase(unittest.TestCase):
         self.assertEqual(self.mole.adjacency_dictionary[self.x][self.y], self.e)
 
     def test_add_aromatic_bond(self):
-        self.arom_first = self.mole.add_aromatic_atom('c')
-        self.arom_second = self.mole.add_aromatic_atom('n')
-        self.e = self.mole.add_aromatic_bond(self.arom_first, self.arom_second)
-        self.assertEqual(self.mole.adjacency_dictionary[self.arom_first][self.arom_second], self.e)
+        self.aromatic_first = self.mole.add_aromatic_atom('c')
+        self.aromatic_second = self.mole.add_aromatic_atom('n')
+        self.e = self.mole.add_aromatic_bond(self.aromatic_first, self.aromatic_second)
+        self.assertEqual(self.mole.adjacency_dictionary[self.aromatic_first][self.aromatic_second], self.e)
 
 if __name__ == '__main__':
     unittest.main()

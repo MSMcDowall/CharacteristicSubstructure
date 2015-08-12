@@ -72,10 +72,32 @@ class GraphTestCase(unittest.TestCase):
         self.assertFalse(self.g.contains_edge(self.y, self.z))
 
     def test_swap_vertex(self):
-        pass
+        self.a = graph.Vertex('A')
+        self.b = self.g.add_vertex('B')
+        self.f = self.g.add_edge(self.x, self.b, 'f')
+        self.assertIn(self.b, self.g.adjacency_dictionary[self.x])
+        self.g.swap_vertex(self.b, self.a)
+        self.assertIn(self.a, self.g.adjacency_dictionary[self.x])
+        self.assertIn(self.x, self.g.adjacency_dictionary[self.a])
+        self.assertEqual(self.g.adjacency_dictionary[self.a][self.x].element, 'f')
+        self.assertNotIn(self.b, self.g.adjacency_dictionary)
+
+    def test_swap_path_vertices(self):
+        self.a = graph.Vertex('C')
+        self.g.find_all_paths()
+        self.assertIn(('C', [self.x]), self.g.paths)
+        self.assertIn(('C-N', [self.x, self.y]), self.g.paths)
+        self.g.swap_vertex(self.x, self.a)
+        self.assertIn(('C', [self.a]), self.g.paths)
+        self.assertIn(('C-N', [self.a, self.y]), self.g.paths)
+        self.assertNotIn(('C', [self.x]), self.g.paths)
+        self.assertNotIn(('C-N', [self.x, self.y]), self.g.paths)
 
     def find_all_paths(self):
-        self.new = graph.Vertex('O')
+        self.g.find_all_paths()
+        self.assertIn(('C', [self.x]), self.g.paths)
+        self.assertIn(('N', [self.y]), self.g.paths)
+        self.assertIn(('C-N', [self.x, self.y]), self.g.paths)
 
 if __name__ == '__main__':
     unittest.main()
