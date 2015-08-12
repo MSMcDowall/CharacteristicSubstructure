@@ -111,11 +111,16 @@ class CharacteristicSubstructure(object):
                     structure_copy.adjacency_dictionary[vertex][neighbour] = copy(structure.adjacency_dictionary[vertex][neighbour])
             # Does structure vertices map to any CS vertices?
             # If they do then change them to the CS vertices
+            print 'creating copy of structure'
+            print repr(structure)
+            print structure.adjacency_dictionary
             for vertex in self.path_structures[structure][mole]:
                 if self.path_structures[structure][mole][vertex] in self.characteristic_substructure.adjacency_dictionary:
-                    # SWAP VERTEX ERROR HERE
+                    # SWAP VERTEX ERROR HERE for multiple structure
                     structure_copy.swap_vertex(vertex, self.path_structures[structure][mole][vertex])
+            print structure_copy.adjacency_dictionary
             # Create a copy of the characteristic substructure which will have the structure added to it
+            print 'creating location'
             possible_location = m.Molecule(str(self.characteristic_substructure))
             for vertex in self.characteristic_substructure.adjacency_dictionary:
                 possible_location.adjacency_dictionary[vertex] = {}
@@ -185,7 +190,10 @@ class CharacteristicSubstructure(object):
                     k = len(self.multiple_structures[structure][mole])
                     path = (str(structure) + ' ') * k
                     new_structure = m.Molecule(path)
-                    new_structure.adjacency_dictionary.update(structure.adjacency_dictionary)
+                    for vertex in structure.adjacency_dictionary:
+                        new_structure.adjacency_dictionary[vertex] = {}
+                        for neighbour in structure.adjacency_dictionary[vertex]:
+                            new_structure.adjacency_dictionary[vertex][neighbour] = copy(structure.adjacency_dictionary[vertex][neighbour])
                     new_structure.size += structure.size
                     vertices_mapping = self.path_structures[structure][mole].copy()
                     for pair in self.multiple_structures[structure][mole]:
@@ -193,7 +201,9 @@ class CharacteristicSubstructure(object):
                         # Ensure positions in the structure are unique so they can be used with the nx graph
                         for vertex in substructure.adjacency_dictionary:
                             vertex.position += new_structure.size
-                        new_structure.adjacency_dictionary.update(substructure.adjacency_dictionary)
+                            new_structure.adjacency_dictionary[vertex] = {}
+                            for neighbour in substructure.adjacency_dictionary[vertex]:
+                                new_structure.adjacency_dictionary[vertex][neighbour] = copy(substructure.adjacency_dictionary[vertex][neighbour])
                         new_structure.size += substructure.size
                         vertices_mapping.update(pair[1])
                     # Remove that mole entry from path structures dictionary so it is not repeated
