@@ -19,6 +19,7 @@ class CharacteristicSubstructure(object):
         self.step = step
         self.threshold = threshold
         self.isomorphism_factor = isomorphism_factor
+        
         self.characteristic_substructure = None
         self.molecules = []                 # All the given molecules
         self.paths = {}                     # All the paths from all the molecules with their lengths
@@ -27,6 +28,12 @@ class CharacteristicSubstructure(object):
         self.multiple_structures = {}       # Dictionary of the paths which appear multiple times in molecules
 
     def find_graphs_paths(self, smiles_set):
+        """
+        For each SMILES string a molecule object is created and all of its paths found
+        
+        :param smiles_set: a list of SMILES strings
+        :return: a dictionary containing all of the paths as strings with their length as value
+        """
         for smiles in smiles_set:
             mole = Parser().parse_smiles(smiles)
             #draw(mole)
@@ -66,8 +73,8 @@ class CharacteristicSubstructure(object):
                     self._check_structure_duplicates(structure, mole, vertices)
         # print self.path_structures
         if self.multiple_structures:
-            print 'multiple'
             print self.multiple_structures
+            # self._create_multiple_structures
         for structure in self.path_structures:
             relative_frequency = len(self.path_structures[structure].keys())/float(len(self.molecules))
             if float(relative_frequency) >= self.threshold:
@@ -100,7 +107,9 @@ class CharacteristicSubstructure(object):
             else:
                 length -= 1
         return self.characteristic_substructure
-
+        
+    # TODO restructure to check for my multiples and then go to either of 2 seperate methods
+    # Leave swapping and location comparison in place 
     def _add_structure_to_characteristic(self, structure):
         possible_locations = []    # List of possible locations of subgraphs
         for mole in self.path_structures[structure]:
@@ -176,6 +185,7 @@ class CharacteristicSubstructure(object):
                     structure.add_aromatic_bond(old_molecule_map[atom], old_molecule_map[neighbour])
         return structure, new_molecule_map
 
+    # TODO Put in place while adding to CS rather than before
     def _create_multiple_structures(self):
         # multiple_structures = {structure: mole: [[strut, vert map]...]}
         for structure in self.multiple_structures:
@@ -183,6 +193,7 @@ class CharacteristicSubstructure(object):
             # If the subgraph structure appears in |M|.iso graphs then multiple structures will be created
             if len(self.path_structures[structure]) > len(self.molecules)*self.isomorphism_factor:
                 for mole in self.multiple_structures[structure]:
+                    # TODO Get longest set as value of vertex
                     k = len(self.multiple_structures[structure][mole])
                     path = (str(structure) + ' ') * k
                     new_structure = m.Molecule(path)
@@ -192,6 +203,7 @@ class CharacteristicSubstructure(object):
                             new_structure.adjacency_dictionary[vertex][neighbour] = copy(structure.adjacency_dictionary[vertex][neighbour])
                     new_structure.size += structure.size
                     vertices_mapping = self.path_structures[structure][mole].copy()
+                    # TODO Change to take in to account the new multiple structures setup
                     for pair in self.multiple_structures[structure][mole]:
                         substructure = pair[0]
                         # Ensure positions in the structure are unique so they can be used with the nx graph
@@ -204,10 +216,10 @@ class CharacteristicSubstructure(object):
                         vertices_mapping.update(pair[1])
                     draw(new_structure)
                     # Remove that mole entry from path structures dictionary so it is not repeated
-                    del self.path_structures[structure][mole]
+                    # del self.path_structures[structure][mole]
                     # Add the new larger structure into the dictionary
                     self._create_nx_graph(new_structure)
-                    self._check_structure_duplicates(new_structure, mole, vertices_mapping)
+                    # self._check_structure_duplicates(new_structure, mole, vertices_mapping)
                     # draw(new_structure)
 
     def _create_nx_graph(self, path_structure):
@@ -245,6 +257,7 @@ class CharacteristicSubstructure(object):
         print 'structures'
         print self.path_structures
         for structure in self.path_structures.keys():
+            print 'back again'
             isomorphic_mapping = self._nx_isomorphism(pattern, structure)
             if not isomorphic_mapping:
                 # Continues to next structure for testing as they are not isomorphic
@@ -275,16 +288,17 @@ class CharacteristicSubstructure(object):
                             print self.multiple_structures[structure][mole]
                             for key in altered_mapping:
                                 print self.multiple_structures[structure][mole][key]
-                                self.multiple_structures[structure][mole][key].append(altered_mapping[key])
+                                self.multiple_structures[structure][mole][key].add(altered_mapping[key])
                         else:
                             print 'new multiple structure'
+                            # One extra copy of the structure is being added so TEMPORARY solution: make them sets
                             if structure in self.multiple_structures:
                                 self.multiple_structures[structure][mole] = {}
                             elif structure not in self.multiple_structures:
                                 self.multiple_structures[structure] = {mole: {}}
                             for key in altered_mapping:
-                                self.multiple_structures[structure][mole][key] = [altered_mapping[key],
-                                                                self.path_structures[structure][mole][key]]
+                                self.multiple_structures[structure][mole][key] = set([altered_mapping[key],
+                                                                self.path_structures[structure][mole][key]])
                             print 'new structy ness'
                             print self.multiple_structures
                 else:
@@ -322,6 +336,12 @@ class CharacteristicSubstructure(object):
                 for vertex in self.path_structures[structure][molecule]:
                     if self.path_structures[structure][molecule][vertex] == old:
                         self.path_structures[structure][molecule][vertex] = new
+        for structure in self.multiple_structures:
+            for molecule in self.multiple_structures[structure]:
+                for vertex in self.multiple_structures[structure][molecule]:
+                    if old in self.multiple_structures[structure][molecule][vertex]:
+                        self.multiple_structures[structure][molecule][vertex].add(new)
+                        self.multiple_structures[structure][molecule][vertex].remove(old)
 
 if __name__ == '__main__':
     path_finder = CharacteristicSubstructure(threshold=0.3, length_start=3, length_end=3)
