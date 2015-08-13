@@ -148,8 +148,6 @@ class Graph(object):
 
     # Tests if there is an edge between the two vertices
     def contains_edge(self, first_vertex, second_vertex):
-        print 'containy'
-        print self.adjacency_dictionary[first_vertex]
         if second_vertex in self.adjacency_dictionary[first_vertex]:
             return self.adjacency_dictionary[first_vertex][second_vertex]
         else:
