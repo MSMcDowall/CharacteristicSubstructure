@@ -21,11 +21,18 @@ class CharacteristicSubstructure(object):
         self.isomorphism_factor = isomorphism_factor
         
         self.characteristic_substructure = None
-        self.molecules = []                 # All the given molecules
-        self.paths = {}                     # All the paths from all the molecules with their lengths
-        self.path_structures = {}           # Dictionary of path structures which has record of isomorphic molecules
-        self.structure_nx = {}              # NetworkX graph version of structure
-        self.multiple_structures = {}       # Dictionary of the paths which appear multiple times in molecules
+        # All the given molecules
+        self.molecules = [] 
+        # All the paths from all the molecules with their lengths                
+        self.paths = {} 
+        # Dictionary of path structures which has record of isomorphic molecules and mapping from structure vertices to molecule vertices 
+        # {path structure: {molecule: {structure vertex: molecule vertex}}}
+        self.path_structures = {}  
+        # Dictionary of the structures which appear multiple times in molecules and a list of the molecule vertices that map to the vertices 
+        # {structure: {molecule: {structure vertex : [molecule vertices]}}}        
+        self.multiple_structures = {}       
+        # NetworkX graph version of the path structure, path structure is key
+        self.structure_nx = {}              
 
     def find_graphs_paths(self, smiles_set):
         """
@@ -43,23 +50,37 @@ class CharacteristicSubstructure(object):
         return self.paths
 
     def find_representative_paths(self, length):
+        """
+        Find the paths which occur with a high enough frequency
+        
+        :param length: an integer which sets the length of the paths that should be considered
+        :return: a list of the paths as strings which are representative 
+        """
         representative_paths = []
         for path in self.paths:
-            if self.paths[path] == length:      # Check all the paths which are of the chosen length
+            # Check all the paths which are of the chosen length
+            if self.paths[path] == length:      
                 counter = 0
                 for mole in self.molecules:
-                    if path in (pair[0] for pair in mole.paths):        # Search tuples of (path, position) in molecule
+                    # Search the tuples for each path which consists of path string and vertices present in path
+                    if path in (pair[0] for pair in mole.paths):        
                         counter += 1
                 if float(counter)/len(self.molecules) >= self.threshold:
                     representative_paths.append(path)
         return representative_paths
 
     def find_representative_structures(self, rep_paths):
+        """
+        Find the path structures which appear with a high enough frequency 
+        Ensures there are no duplicates in the dictionary of path structures so that the frequency count is accurate
+        
+        :param rep_paths: a list of the paths which are representive
+        :return: a list of path structures which are representative sorted into order of frequency, highest to lowest
+        """
         print 'rep_paths'
         print rep_paths
         rep_structures = {}
         for path in rep_paths:
-            # print path
             for mole in self.molecules:
                 print 'mole to be structured'
                 print str(mole)
@@ -78,12 +99,21 @@ class CharacteristicSubstructure(object):
         for structure in self.path_structures:
             relative_frequency = len(self.path_structures[structure].keys())/float(len(self.molecules))
             if float(relative_frequency) >= self.threshold:
+                # Store relative frequency of each structure (induced by path in rep_paths) as value in dictionary
                 rep_structures[structure] = relative_frequency
-        # Store relative frequency of each structure (induced by path in rep_paths) as value in dictionary
-        # Sort dictionary based on frequency highest to lowest
+        # Sort dictionary based on frequency highest to lowest and return the path structures only
         return OrderedDict(sorted(rep_structures.items(), key=lambda x: x[1], reverse=True)).keys()
 
     def find_characteristic_substructure(self):
+        """
+        Find the characteristic substructure for a set of molecules
+        Calls the representative paths method for each of the lengths between the start length and the end
+        Creates the CS with the most frequent path structure
+        Each of the subsequent path structures is added to the CS in order of frequency
+        Swaps the vertices in the molecules which map to the CS with the CS vertices
+        
+        :return: a molecule object that is the characteristic substructure of the list of molecules
+        """
         smiles_set = self._data_input()
         self.find_graphs_paths(smiles_set)
         length = self.length_start
@@ -108,9 +138,18 @@ class CharacteristicSubstructure(object):
                 length -= 1
         return self.characteristic_substructure
         
+    
     # TODO restructure to check for my multiples and then go to either of 2 seperate methods
     # Leave swapping and location comparison in place 
     def _add_structure_to_characteristic(self, structure):
+        """
+        Adds the given structure to the characteristic substructure in the location where it appears most frequently in the molecules
+        A different method is called depending on if the structure appears once or many times in the molecules
+        A list of the possible locations on the CS where the structure could be added is created
+        This list is then sorted in terms of frequency and the CS with the most common position of the structure becomes the new CS
+        
+        :param structure: the molecule object which is to be added to the characteristic substructure
+        """
         possible_locations = []    # List of possible locations of subgraphs
         for mole in self.path_structures[structure]:
             # Create copy of the structure so that changes can be made without altering original structure
@@ -156,10 +195,20 @@ class CharacteristicSubstructure(object):
 
 
     def _create_structure(self, path, mole, vertices):
+        """
+        Creates a path strucuture which is a molecule object representing the form that the given path takes within a molecule
+        
+        :param path: the string which represents the path (Entered as the SMILES string for the path structure)
+        :param molecule: the molecule object which contains the given path and vertices
+        :param vertices: a list of vertices which are encountered in the path of the molecule
+        :return: a tuple of the newly created path structure and a dictionary mapping the structures vertices to the molecule vertices 
+        """
         print 'into create structure'
         structure = m.Molecule(path)
-        old_molecule_map = {}           # Uses the original vertices as keys, structure vertices as values
-        new_molecule_map = {}           # Uses the structure vertices as keys, original vertices as values
+        # Uses the original vertices as keys, structure vertices as values, used to create the edges
+        old_molecule_map = {}  
+        # Uses the structure vertices as keys, original vertices as values, used to find the molecule vertices if the structure is given         
+        new_molecule_map = {}           
         for atom in vertices:
             if isinstance(atom, m.Atom):
                 new_atom = structure.add_atom(atom.element)
@@ -171,7 +220,7 @@ class CharacteristicSubstructure(object):
                 new_molecule_map[new_atom] = atom
         for atom in vertices:
             for neighbour in vertices:
-                # Test if there is an edge to other atoms in path
+                # Test if there is an edge to any of the other atoms in the path
                 edge = mole.contains_edge(atom, neighbour)
                 if isinstance(edge, m.SingleBond):
                     structure.add_single_bond(old_molecule_map[atom], old_molecule_map[neighbour])
@@ -223,7 +272,12 @@ class CharacteristicSubstructure(object):
                     # draw(new_structure)
 
     def _create_nx_graph(self, path_structure):
-        # Create a new NetworkX graph
+        """
+        Creates a copy of the molecule object as an NetworkX graph
+        The position attirbute of each structure vertices is used as the index of the NetworkX graph
+        
+        :param path_structure: the molecule object which will be turned into a NetworkX graph
+        """
         g = nx.Graph()
         # For each vertex and edge in molecule graph add node and edge in NetworkX graph
         for n in path_structure.vertices():
@@ -241,7 +295,17 @@ class CharacteristicSubstructure(object):
                 g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='aromatic')
         self.structure_nx[path_structure] = g
 
+    
     def _nx_isomorphism(self, pattern, target):
+        """
+        Uses the NetworkX isomorphism algorithm to check if the pattern graph and the target graph are isomorphic
+        The faster_could_be_isomorphic method is used to discount two structures if they could not possibly be isomorphic
+        
+        :param pattern: a molecule object which is to be tested for isomorphism
+        :param target: a molecule object which pattern graph is to be compared against
+        :return: None if the graphs are not isomorphic
+        :return: a dictionary which maps the indices of the two NetworkX graphs together if they are isomorphic
+        """
         # Error calling without making structure
         if not nx.faster_could_be_isomorphic(self.structure_nx[pattern], self.structure_nx[target]):
                 # Graphs are definitely not isomorphic
@@ -309,6 +373,11 @@ class CharacteristicSubstructure(object):
         self.path_structures = temporary_structure_dict.copy()
 
     def _data_input(self):
+        """
+        Takes in a txt file, reads each line and stores the result in a list
+        
+        :return: a list of each of the lines of the text file
+        """
         smiles_set = []
         reader = open('SMILES.txt', mode='rb')
         for line in reader:
@@ -320,6 +389,11 @@ class CharacteristicSubstructure(object):
         pass
 
     def _swap_molecule_vertices(self, structure):
+        """
+        Changes the vertices of the molecules with the vertices of the characteristic substructure that they map to
+        
+        :param structure: the graph object that has been added to the CS
+        """
         for mole in self.path_structures[structure]:
             for key in self.path_structures[structure][mole]:
                 # If this vertex of the structure has been added to the CS
@@ -331,6 +405,9 @@ class CharacteristicSubstructure(object):
 
 
     def _swap_path_structure(self, old, new):
+        """
+        Changes each occasion of the molecule vertex with the CS vertex that has replaced it
+        """
         for structure in self.path_structures:
             for molecule in self.path_structures[structure]:
                 for vertex in self.path_structures[structure][molecule]:
