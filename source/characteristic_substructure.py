@@ -93,11 +93,9 @@ class CharacteristicSubstructure(object):
                     structure = structure_tuple[0]
                     vertices = structure_tuple[1]
                     # Test if the structure has already been encountered
-                    self._create_nx_graph(structure)
                     self._check_structure_duplicates(structure, molecule, vertices)
-        # print self.path_structures
         if self.multiple_structures:
-            print self.multiple_structures
+            print 'multiple structures'
             # self._create_multiple_structures
         for structure in self.path_structures:
             relative_frequency = len(self.path_structures[structure].keys()) / float(len(self.molecules))
@@ -245,18 +243,22 @@ class CharacteristicSubstructure(object):
             for molecule in multi_molecules:
                 # Create a graph representing the multiple copies of the structure
                 path = (str(structure) + ' ') * k
-                vertices = [vertex[index] for vertex in self.multiple_structures[structure][molecule].values()
-                            for index in range(len(self.multiple_structures[structure][molecule].values()[0]))]
+                v = [vertex[index] for vertex in self.multiple_structures[structure][molecule].values()
+                     for index in range(len(self.multiple_structures[structure][molecule].values()[0]))]
+                vertices = []
+                for vertex in v:
+                    if vertex not in vertices:
+                        vertices.append(vertex)
                 multi_structure_tuple = self._create_structure(path, molecule, vertices)
                 multi_structure = multi_structure_tuple[0]
                 multi_vertices = multi_structure_tuple[1]
                 # The structure is added to the path_structures dictionary (using duplicates method)
                 # So that the methods to swap vertices will work correctly
-                self._create_nx_graph(multi_structure)
-                self._check_structure_duplicates(multi_structure, molecule, multi_vertices)
+                print 'Multi DUPLICATES'
+                struct = self._check_structure_duplicates(multi_structure, molecule, multi_vertices)
                 # Create a possible location which is a combination of the CS and the multi_structure
-                possible_location = self._add_single_to_characteristic(multi_structure, molecule)
-                k_subgraphs[possible_location] = multi_structure
+                possible_location = self._add_single_to_characteristic(struct, molecule)
+                k_subgraphs[possible_location] = struct
             chosen_location = self._most_frequent_location(k_subgraphs.keys())
             self.characteristic_substructure = chosen_location
             self._swap_molecule_vertices(k_subgraphs[chosen_location])
@@ -386,6 +388,10 @@ class CharacteristicSubstructure(object):
         :return: None if the graphs are not isomorphic
         :return: a dictionary which maps the indices of the two NetworkX graphs together if they are isomorphic
         """
+        if pattern not in self.structure_nx:
+            self._create_nx_graph(pattern)
+        if target not in self.structure_nx:
+            self._create_nx_graph(target)
         if not nx.faster_could_be_isomorphic(self.structure_nx[pattern], self.structure_nx[target]):
             # Graphs are definitely not isomorphic
             return None
@@ -403,9 +409,10 @@ class CharacteristicSubstructure(object):
         :param pattern: the graph object which is to be tested against the other graphs
         :param molecule: the molecule which contained the subgraph isomorphic to the structure
         :param vertices: the dictionary mapping the pattern vertices to the molecule vertices
-        :return: None
+        :return: the graph object which has been newly added or updated
         """
-        # A copy of path_structures is made so that it can be altered while also looping over the elements
+        unique_structure = None
+        # A copy of path_structures is made so that it can be altered while also looping over the element
         temporary_structure_dict = self.path_structures.copy()
         for structure in self.path_structures:
             nx_mapping = self._nx_isomorphism(pattern, structure)
@@ -432,10 +439,13 @@ class CharacteristicSubstructure(object):
                         self._add_structure_to_multiple_dictionary(structure, molecule, isomorphic_mapping)
                 else:
                     temporary_structure_dict[structure][molecule] = isomorphic_mapping
+                unique_structure = structure
                 break
         else:
             temporary_structure_dict[pattern] = {molecule: vertices}
+            unique_structure = pattern
         self.path_structures = temporary_structure_dict.copy()
+        return unique_structure
 
     def _add_structure_to_multiple_dictionary(self, structure, molecule, mapping):
         """
@@ -517,12 +527,14 @@ class CharacteristicSubstructure(object):
         for structure in self.multiple_structures:
             for molecule in self.multiple_structures[structure]:
                 for vertex in self.multiple_structures[structure][molecule]:
-                    if old in self.multiple_structures[structure][molecule][vertex]:
-                        self.multiple_structures[structure][molecule][vertex].append(new)
-                        self.multiple_structures[structure][molecule][vertex].remove(old)
-
+                    # Ensure each instance of the old vertex is changed
+                    # The new vertex is put into the same position as the old
+                    indices = [self.multiple_structures[structure][molecule][vertex].index(v)
+                               for v in self.multiple_structures[structure][molecule][vertex] if v == old]
+                    for i in indices:
+                        self.multiple_structures[structure][molecule][vertex][i] = new
 
 if __name__ == '__main__':
-    path_finder = CharacteristicSubstructure(length_start=3, length_end=3)
+    path_finder = CharacteristicSubstructure()
     struct = path_finder.find_characteristic_substructure()
     print struct
