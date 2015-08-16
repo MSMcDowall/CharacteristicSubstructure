@@ -275,7 +275,7 @@ class Graph(object):
         position_stack.append(v)
         for w in self.adjacency_dictionary[v].keys():
             if not w.visited:
-                self.find(w, path_stack, position_stack, all_paths)
+                self._find(w, path_stack, position_stack, all_paths)
         letters = ''.join(path_stack)
         path = letters[:-1]    # Remove final dash to make string more readable
         positions = list(position_stack)
