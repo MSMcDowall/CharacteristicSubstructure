@@ -23,7 +23,7 @@ class CharacteristicSubstructure(object):
         self.isomorphism_factor = isomorphism_factor
 
         # The structure which has been created through the combination of representative path structures
-        self.characteristic_substructure = None
+        self.characteristic_substructure = m.Molecule('')
         # Dictionary holding the locations of the molecules which map to the characteristic substructure
         self.cs_locations = {}
         # All the given molecules
@@ -34,7 +34,10 @@ class CharacteristicSubstructure(object):
         # {path structure: {molecule: {structure vertex: molecule vertex}}}
         self.path_structures = {}
         # Dictionary of structures that appear multiple times in molecules and list of molecule vertices that map them
-        # {structure: {molecule: {structure vertex : [molecule vertices]}}}        
+        # {single structure: {molecule: {structure vertex: [molecule vertices]}}}
+        self.multiple_vertices = {}
+        # Dictionary of structures which are composed of instances of other path structures, maps to molecule vertices
+        # {multiple structure: {molecule: {structure vertex: molecule vertex}}}
         self.multiple_structures = {}
         # NetworkX graph version of the path structure, path structure is key
         self.structure_nx = {}
@@ -79,16 +82,16 @@ class CharacteristicSubstructure(object):
         Find the path structures which appear with a high enough frequency.
 
         Ensures there are no duplicates in the dictionary of path structures so that the frequency count is accurate
-        :param rep_paths: a list of the paths which are representive
+        :param rep_paths: a list of the paths which are representative
         :return: a list of path structures which are representative sorted into order of frequency, highest to lowest
         """
-        print 'rep_paths'
+        print 'REP PATHS'
         print rep_paths
         rep_structures = {}
         for path in rep_paths:
             print path
             for molecule in self.molecules:
-                print 'molecule to be structured'
+                print 'MOLECULE TO BE STRUCTURE'
                 print str(molecule)
                 path_vertices = [pair[1] for pair in molecule.paths if pair[0] == path]  # Lists of path vertices
                 for vertices in path_vertices:
@@ -97,7 +100,7 @@ class CharacteristicSubstructure(object):
                     vertices = structure_tuple[1]
                     # Test if the structure has already been encountered
                     self._check_structure_duplicates(structure, molecule, vertices)
-        if self.multiple_structures:
+        if self.multiple_vertices:
             print 'multiple structures'
             # self._create_multiple_structures
         for structure in self.path_structures:
@@ -124,21 +127,16 @@ class CharacteristicSubstructure(object):
         length = self.length_start
         while length >= self.length_end:
             representative_paths = self.find_representative_paths(length)
-            print 'found representative paths'
+            print 'REPRESENTATIVE STRUCTURES'
             sorted_list = self.find_representative_structures(representative_paths)
             print sorted_list
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_list:
-                print 'sorted list of representative structures'
-                self.characteristic_substructure = copy(sorted_list[0])
-                print 'lets swap CS'
-                # self._swap_molecule_vertices(sorted_list[0])
-                self._add_cs_locations(sorted_list[0])
-                for structure in sorted_list[1:]:
-                    print 'adding more to CS'
+                for structure in sorted_list:
+                    print 'ADDING MORE TO CS'
+                    print structure
                     self._add_structure_to_characteristic(structure)
-                    print 'edited new cs struct'
                 length -= self.step
             else:
                 length -= 1
@@ -161,6 +159,8 @@ class CharacteristicSubstructure(object):
                     self.cs_locations[molecule][self.path_structures[structure][molecule][vertex]] = vertex
         print 'cs vertices'
         print self.characteristic_substructure.adjacency_dictionary.keys()
+        print 'cs locations'
+        print self.cs_locations
 
 
     # TODO restructure to check for my multiples and then go to either of 2 separate methods
@@ -176,16 +176,18 @@ class CharacteristicSubstructure(object):
         :return: None
         """
         print structure
-        if structure in self.multiple_structures:
+        if structure in self.multiple_vertices:
             self._add_multiple_to_characteristic(structure)
-        elif structure not in self.multiple_structures:
-            print 'single'
+        elif structure not in self.multiple_vertices:
+            print 'SINGLE'
             possible_locations = []
             for molecule in self.path_structures[structure]:
                 possible = self._add_single_to_characteristic(structure, molecule)
                 possible_locations.append(possible)
             self.characteristic_substructure = self._most_frequent_location(possible_locations)
             self._add_cs_locations(structure)
+            print 'CS verts'
+            print self.characteristic_substructure.adjacency_dictionary.keys()
 
     def _most_frequent_location(self, possible_locations):
         """
@@ -213,6 +215,7 @@ class CharacteristicSubstructure(object):
         :param structure: The structure that is to be added to CS in different locations
         :return: list of graphs which display the different locations where the structure could be added to CS
         """
+        print 'ADD SINGLE TO CS'
         # Create a copy of the characteristic substructure which will have the structure added to it
         possible_location = m.Molecule(str(self.characteristic_substructure))
         for vertex in self.characteristic_substructure.adjacency_dictionary:
@@ -221,9 +224,21 @@ class CharacteristicSubstructure(object):
                 possible_location.adjacency_dictionary[vertex][neighbour] = copy(self.characteristic_substructure.
                                                                                  adjacency_dictionary
                                                                                  [vertex][neighbour])
+        # This tests if the this molecule has any subgraphs isomorphic to the current characteristic substructure
+        # If there are no isomorphic subgraphs then the possible CS will be disconnected
+        if molecule not in self.cs_locations:
+            for vertex in structure.adjacency_dictionary:
+                possible_location.adjacency_dictionary[vertex] = copy(structure.adjacency_dictionary[vertex])
+            return possible_location
+        # If the molecule does contain a subgraph which is isomorphic to the current CS
+        # then check if this subgraph shares any vertices or edges with the structure
         for vertex in structure.adjacency_dictionary:
             neighbours_copy = copy(structure.adjacency_dictionary[vertex])
             for neighbour in structure.adjacency_dictionary[vertex]:
+                print 'STRUCTURE'
+                print structure.adjacency_dictionary.keys()
+                print self.path_structures[structure][molecule].keys()
+                print self.path_structures[structure][molecule][neighbour]
                 if self.path_structures[structure][molecule][neighbour] in self.cs_locations[molecule]:
                     cs_neighbour = self.cs_locations[molecule][self.path_structures[structure][molecule][neighbour]]
                     neighbours_copy[cs_neighbour] = copy(structure.adjacency_dictionary[vertex][neighbour])
@@ -237,35 +252,6 @@ class CharacteristicSubstructure(object):
                 possible_location.adjacency_dictionary[vertex] = neighbours_copy
                 vertex.position += possible_location.size
                 possible_location.size += 1
-        # # Create copy of the structure so that changes can be made without altering original structure
-        # structure_copy = m.Molecule(str(structure))
-        # for vertex in structure.adjacency_dictionary:
-        #     structure_copy.adjacency_dictionary[vertex] = {}
-        #     for neighbour in structure.adjacency_dictionary[vertex]:
-        #         structure_copy.adjacency_dictionary[vertex][neighbour] = copy(structure.adjacency_dictionary[vertex]
-        #                                                                      [neighbour])
-        # # Does structure vertices map to any CS vertices?
-        # # If they do then change them to the CS vertices
-        # for vertex in self.path_structures[structure][molecule]:
-        #     if self.path_structures[structure][molecule][vertex] in self.cs_locations[molecule]:
-        #         cs_vertex = self.cs_locations[molecule][self.path_structures[structure][molecule][vertex]]
-        # # Create a copy of the characteristic substructure which will have the structure added to it
-        # possible_location = m.Molecule(str(self.characteristic_substructure))
-        # for vertex in self.characteristic_substructure.adjacency_dictionary:
-        #     possible_location.adjacency_dictionary[vertex] = {}
-        #     for neighbour in self.characteristic_substructure.adjacency_dictionary[vertex]:
-        #         possible_location.adjacency_dictionary[vertex][neighbour] = copy(self.characteristic_substructure.
-        #                                                                          adjacency_dictionary
-        #                                                                          [vertex][neighbour])
-        # # For vertices in structure not in CS
-        # # Add to CS also append bonds for structure vertices
-        # for vertex in structure_copy.adjacency_dictionary:
-        #     if vertex in self.characteristic_substructure.adjacency_dictionary:
-        #         possible_location.adjacency_dictionary[vertex].update(structure_copy.adjacency_dictionary[vertex])
-        #     else:
-        #         possible_location.adjacency_dictionary[vertex] = structure_copy.adjacency_dictionary[vertex]
-        #         vertex.position += possible_location.size
-        #         possible_location.size += 1
         return possible_location
 
     def _add_multiple_to_characteristic(self, structure):
@@ -275,24 +261,24 @@ class CharacteristicSubstructure(object):
         :param structure: The structure which appears multiple times in the molecules and is to be added to CS
         :return: a list of graphs displaying the possible locations that the structure could have in the CS
         """
-        if len(self.multiple_structures[structure]) < len(self.molecules) * self.isomorphism_factor:
+        if len(self.multiple_vertices[structure]) < len(self.molecules) * self.isomorphism_factor:
             return []
         # accepted_locations = []
         repetitions = set()
-        for molecule in self.multiple_structures[structure]:
+        for molecule in self.multiple_vertices[structure]:
             # Finds the number of different molecules associated  with one of the structure vertices
             # This indicates the number of instances of the structure that can be found in the molecule
-            repetitions.add(len(self.multiple_structures[structure][molecule][structure.vertices()[0]]))
+            repetitions.add(len(self.multiple_vertices[structure][molecule][structure.vertices()[0]]))
         for k in repetitions:
             k_subgraphs = {}
             # A list of the molecules that contain exactly k incidences of the subgraph
-            multi_molecules = [m for m in self.multiple_structures[structure]
-                               if len(self.multiple_structures[structure][m].values()[0]) == k]
+            multi_molecules = [m for m in self.multiple_vertices[structure]
+                               if len(self.multiple_vertices[structure][m].values()[0]) == k]
             for molecule in multi_molecules:
                 # Create a graph representing the multiple copies of the structure
                 path = (str(structure) + ' ') * k
-                v = [vertex[index] for vertex in self.multiple_structures[structure][molecule].values()
-                     for index in range(len(self.multiple_structures[structure][molecule].values()[0]))]
+                v = [vertex[index] for vertex in self.multiple_vertices[structure][molecule].values()
+                     for index in range(len(self.multiple_vertices[structure][molecule].values()[0]))]
                 vertices = []
                 for vertex in v:
                     if vertex not in vertices:
@@ -300,10 +286,18 @@ class CharacteristicSubstructure(object):
                 multi_structure_tuple = self._create_structure(path, molecule, vertices)
                 multi_structure = multi_structure_tuple[0]
                 multi_vertices = multi_structure_tuple[1]
+                # Change all the positions of the multi structure so that they are each unique
+                position = 0
+                for vertex in multi_structure.adjacency_dictionary:
+                    vertex.position = position
+                    position += 1
                 # The structure is added to the path_structures dictionary (using duplicates method)
                 # So that the methods to swap vertices will work correctly
                 print 'Multi DUPLICATES'
+                print multi_structure.adjacency_dictionary.keys()
                 struct = self._check_structure_duplicates(multi_structure, molecule, multi_vertices)
+                print struct.adjacency_dictionary.keys()
+                print self.path_structures[struct][molecule].keys()
                 # Create a possible location which is a combination of the CS and the multi_structure
                 possible_location = self._add_single_to_characteristic(struct, molecule)
                 k_subgraphs[possible_location] = struct
@@ -321,7 +315,7 @@ class CharacteristicSubstructure(object):
         :return: a tuple of the newly created path structure and
                 a dictionary mapping the structures vertices to the molecule vertices
         """
-        print 'into create structure'
+        print 'CREATE STRUCTURE'
         structure = m.Molecule(path)
         # Uses the original vertices as keys, structure vertices as values, used to create the edges
         old_molecule_map = {}
@@ -351,6 +345,8 @@ class CharacteristicSubstructure(object):
                     structure.add_quadruple_bond(old_molecule_map[atom], old_molecule_map[neighbour])
                 elif isinstance(edge, m.AromaticBond):
                     structure.add_aromatic_bond(old_molecule_map[atom], old_molecule_map[neighbour])
+        print structure
+        print structure.adjacency_dictionary.keys()
         return structure, new_molecule_map
 
     def _create_nx_graph(self, path_structure):
@@ -457,26 +453,26 @@ class CharacteristicSubstructure(object):
         :param mapping: a mapping from the structure to the molecule vertices
         :return: None
         """
-        if structure in self.multiple_structures and molecule in self.multiple_structures[structure]:
+        if structure in self.multiple_vertices and molecule in self.multiple_vertices[structure]:
             # Creates a list of lists which sets out the vertices that are mapped to each instance of the structure
             # within the molecule, this ensures that an instance isn't duplicated within the dictionary.
-            multiples = [[vertex[index] for vertex in self.multiple_structures[structure][molecule].values()]
-                         for index in range(len(self.multiple_structures[structure][molecule].values()[0]))]
+            multiples = [[vertex[index] for vertex in self.multiple_vertices[structure][molecule].values()]
+                         for index in range(len(self.multiple_vertices[structure][molecule].values()[0]))]
             for v in multiples:
                 if Counter(mapping.values()) == Counter(v):
                     return
             # Store the molecule vertex which maps to each of the structure vertices
             for key in mapping:
-                self.multiple_structures[structure][molecule][key].append(mapping[key])
+                self.multiple_vertices[structure][molecule][key].append(mapping[key])
         else:
-            if structure in self.multiple_structures:
-                self.multiple_structures[structure][molecule] = {}
-            elif structure not in self.multiple_structures:
-                self.multiple_structures[structure] = {molecule: {}}
+            if structure in self.multiple_vertices:
+                self.multiple_vertices[structure][molecule] = {}
+            elif structure not in self.multiple_vertices:
+                self.multiple_vertices[structure] = {molecule: {}}
             # When the structure is encountered for the second time in the molecule the mapping from path_structures
             # is also stored into the multiple_structures dictionary so it includes all instances of the structure
             for key in mapping:
-                self.multiple_structures[structure][molecule][key] = [self.path_structures[structure][molecule][key],
+                self.multiple_vertices[structure][molecule][key] = [self.path_structures[structure][molecule][key],
                                                                       mapping[key]]
 
     def _data_input(self):
@@ -498,4 +494,4 @@ class CharacteristicSubstructure(object):
 if __name__ == '__main__':
     path_finder = CharacteristicSubstructure(length_start=14)
     struct = path_finder.find_characteristic_substructure()
-    print struct
+    print struct.adjacency_dictionary.keys()

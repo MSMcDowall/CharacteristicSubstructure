@@ -123,13 +123,13 @@ class Graph(object):
         self.vertex_to_graph(new_vertex)
         return new_vertex
 
+    # TODO try for key error
     def vertex_to_graph(self, vertex):
         """
         Adds a vertex object to the graph by assigning a dictionary which will contain all adjacent vertices and edges
         :param vertex: the vertex object that is to be added to the graph
         :return: None
         """
-        # try for key error
         self.adjacency_dictionary[vertex] = {}
         vertex.position = self.size
         self.size += 1
