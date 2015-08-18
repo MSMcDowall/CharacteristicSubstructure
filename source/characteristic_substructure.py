@@ -5,6 +5,7 @@ from collections import OrderedDict, Counter
 from copy import copy, deepcopy
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
+#from draw_molecule import draw_molecule as draw
 
 
 # from draw_molecule import draw_molecule as draw
@@ -121,7 +122,7 @@ class CharacteristicSubstructure(object):
             representative_paths = self.find_representative_paths(length)
             print 'REPRESENTATIVE STRUCTURES'
             sorted_list = self.find_representative_structures(representative_paths)
-            print 'SORTED LISt'
+            print 'SORTED LIST'
             print sorted_list
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
@@ -130,8 +131,6 @@ class CharacteristicSubstructure(object):
                     print 'ADDING MORE TO CS'
                     print structure
                     self._add_structure_to_characteristic(structure)
-                    print 'CS CS CS'
-                    print self.characteristic_substructure.adjacency_dictionary.keys()
                 length -= self.step
             else:
                 length -= 1
@@ -236,9 +235,6 @@ class CharacteristicSubstructure(object):
             elif self.path_structures[structure][molecule][vertex] not in self.cs_locations[molecule]:
                 possible_location.vertex_to_graph(vertex)
                 possible_location.adjacency_dictionary[vertex] = neighbours_copy
-        print 'possible location'
-        print repr(possible_location)
-        print [v.position for v in possible_location.adjacency_dictionary.keys()]
         return possible_location
 
     def _add_multiple_to_characteristic(self, structure):
@@ -274,9 +270,6 @@ class CharacteristicSubstructure(object):
                 multi_structure_tuple = self._create_structure(path, molecule, vertices)
                 multi_structure = multi_structure_tuple[0]
                 multi_vertices = multi_structure_tuple[1]
-                print 'Multi DUPLICATES'
-                print repr(multi_structure)
-                print [v.position for v in multi_structure.adjacency_dictionary.keys()]
                 # The structure is added to the path_structures dictionary (using duplicates method)
                 # So that the methods to swap vertices will work correctly
                 unique_multi = self._check_structure_duplicates(multi_structure, molecule, multi_vertices)
@@ -288,9 +281,6 @@ class CharacteristicSubstructure(object):
                     # Create a possible location which is a combination of the CS and the multi_structure
                     possible_location = self._add_single_to_characteristic(multi, molecule)
                     possible_locations[possible_location] = multi
-                    print 'struct after adding to CS'
-                    print repr(multi)
-                    print [v.position for v in multi.adjacency_dictionary.keys()]
             chosen_location = self._most_frequent_location(possible_locations.keys())
             self.characteristic_substructure = chosen_location
             self._add_cs_locations(possible_locations[chosen_location])
@@ -334,9 +324,6 @@ class CharacteristicSubstructure(object):
                     structure.add_quadruple_bond(old_molecule_map[atom], old_molecule_map[neighbour])
                 elif isinstance(edge, m.AromaticBond):
                     structure.add_aromatic_bond(old_molecule_map[atom], old_molecule_map[neighbour])
-        print 'structure newness'
-        print repr(structure)
-        print [v.position for v in structure.adjacency_dictionary.keys()]
         return structure, new_molecule_map
 
     def _create_nx_graph(self, path_structure):
@@ -375,9 +362,6 @@ class CharacteristicSubstructure(object):
         :return: None if the graphs are not isomorphic
         :return: a dictionary which maps the indices of the two NetworkX graphs together if they are isomorphic
         """
-        # print 'inside isomorphism target'
-        # print repr(target)
-        # print [v.position for v in target.adjacency_dictionary.keys()]
         if pattern not in self.structure_nx:
             #self._update_position(pattern)
             self._create_nx_graph(pattern)
@@ -412,9 +396,6 @@ class CharacteristicSubstructure(object):
                 # Continues to next structure for testing as they are not isomorphic
                 continue
             if nx_mapping:
-                print 'isommorphism'
-                print repr(structure)
-                print [v.position for v in structure.adjacency_dictionary.keys()]
                 # Maps the vertices from the pattern to the target
                 isomorphic_mapping = {}
                 for target_position in nx_mapping:
@@ -441,11 +422,6 @@ class CharacteristicSubstructure(object):
             unique_structure = pattern
         self.path_structures = temporary_structure_dict.copy()
         return unique_structure
-
-    # def _update_position(self, pattern):
-    #     keylist = pattern.adjacency_dictionary.keys()
-    #     for pos in range(0, len(keylist)-1):
-    #         keylist[pos].position = pos
 
     def _add_structure_to_multiple_dictionary(self, structure, molecule, mapping):
         """
@@ -497,4 +473,5 @@ class CharacteristicSubstructure(object):
 if __name__ == '__main__':
     path_finder = CharacteristicSubstructure()
     struct = path_finder.find_characteristic_substructure()
-    print struct.adjacency_dictionary.keys()
+    print struct.adjacency_dictionary
+    #draw(struct)
