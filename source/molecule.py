@@ -20,7 +20,7 @@ class Atom(graph.Vertex):
         self._ring_break = boolean
     
     def __str__(self):
-        return 'Atom element %s at position %s' % (self.element, self.position)
+        return '%s atom at position %s' % (self.element, self.position)
 
     def __repr__(self):
         return '<Atom %s at %s>' % (self.element, id(self))
@@ -32,31 +32,34 @@ class AromaticAtom(Atom):
         Atom.__init__(self, element, isotope, hydrogen, charge)
 
     def __str__(self):
-        return 'Aromatic element %s at position %s' % (self.element, self.position)
+        return 'aromatic %s atom at position %s' % (self.element, self.position)
 
     def __repr__(self):
         return '<Aromatic Atom %s at %s>' % (self.element, id(self))
+
 
 class SingleBond(graph.Edge):
     def __init__(self, origin, destination):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        return 'Single bond ' + graph.Edge.__str__(self)
+        return 'single bond'
+
 
 class DoubleBond(graph.Edge):
     def __init__(self, origin, destination):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        return 'Double bond ' + graph.Edge.__str__(self)
+        return 'double bond'
+
 
 class TripleBond(graph.Edge):
     def __init__(self, origin, destination):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        return 'Triple bond ' + graph.Edge.__str__(self)
+        return 'triple bond'
 
 
 class QuadrupleBond(graph.Edge):
@@ -64,7 +67,7 @@ class QuadrupleBond(graph.Edge):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        return 'Quadruple bond ' + graph.Edge.__str__(self)
+        return 'quadruple bond'
 
 
 class AromaticBond(graph.Edge):
@@ -72,7 +75,7 @@ class AromaticBond(graph.Edge):
         graph.Edge.__init__(self, origin, destination)
 
     def __str__(self):
-        return 'Aromatic bond ' + graph.Edge.__str__(self)
+        return 'aromatic bond'
 
 
 class Molecule(graph.Graph):

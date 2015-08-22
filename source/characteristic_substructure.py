@@ -29,8 +29,6 @@ class CharacteristicSubstructure(object):
         self.cs_locations = {}
         # All the given molecules
         self.molecules = []
-        # All the paths from all the molecules with their lengths                
-        self.paths = {}
         # Dictionary of path structures with the isomorphic molecules and mapping vertices from structure to molecule
         # {path structure: {molecule: {structure vertex: molecule vertex}}}
         self.path_structures = {}
@@ -43,22 +41,23 @@ class CharacteristicSubstructure(object):
         # NetworkX graph version of the path structure, path structure is key
         self.structure_nx = {}
 
-    def find_graphs_paths(self, smiles_set):
+    def _find_graphs_paths(self, smiles_set):
         """
         For each SMILES string a molecule object is created and all of its paths found
         
         :param smiles_set: a list of SMILES strings
         :return: a dictionary containing all of the paths as strings with their length as value
         """
+        paths = {}
         for smiles in smiles_set:
             molecule = Parser().parse_smiles(smiles)
             # draw(molecule)
             self.molecules.append(molecule)
             path_dict = molecule.find_all_paths()
-            self.paths.update(path_dict)
-        return self.paths
+            paths.update(path_dict)
+        return paths
 
-    def find_representative_paths(self, length):
+    def _find_representative_paths(self, paths, length):
         """
         Find the paths which occur with a high enough frequency
         
@@ -66,9 +65,9 @@ class CharacteristicSubstructure(object):
         :return: a list of the paths as strings which are representative 
         """
         representative_paths = []
-        for path in self.paths:
+        for path in paths:
             # Check all the paths which are of the chosen length
-            if self.paths[path] == length:
+            if paths[path] == length:
                 counter = 0
                 for molecule in self.molecules:
                     # Search the tuples for each path which consists of path string and vertices present in path
@@ -78,7 +77,7 @@ class CharacteristicSubstructure(object):
                     representative_paths.append(path)
         return representative_paths
 
-    def find_representative_structures(self, rep_paths):
+    def _find_representative_structures(self, rep_paths):
         """
         Find the path structures which appear with a high enough frequency.
 
@@ -102,7 +101,7 @@ class CharacteristicSubstructure(object):
                 # Store relative frequency of each structure (induced by path in rep_paths) as value in dictionary
                 rep_structures[structure] = relative_frequency
         # Sort dictionary based on frequency highest to lowest and return the path structures only
-        return OrderedDict(sorted(rep_structures.items(), key=lambda x: x[1], reverse=True)).keys()
+        return OrderedDict(sorted(rep_structures.items(), key=lambda x: x[1], reverse=True))
 
     def find_characteristic_substructure(self):
         """
@@ -116,18 +115,18 @@ class CharacteristicSubstructure(object):
         :return: a molecule object that is the characteristic substructure of the list of molecules
         """
         smiles_set = self._data_input()
-        self.find_graphs_paths(smiles_set)
+        paths = self._find_graphs_paths(smiles_set)
         length = self.length_start
         while length >= self.length_end:
-            representative_paths = self.find_representative_paths(length)
+            representative_paths = self._find_representative_paths(paths, length)
             print 'REPRESENTATIVE STRUCTURES'
-            sorted_list = self.find_representative_structures(representative_paths)
+            sorted_dictionary = self._find_representative_structures(representative_paths)
             print 'SORTED LIST'
-            print sorted_list
+            print sorted_dictionary
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
-            if sorted_list:
-                for structure in sorted_list:
+            if sorted_dictionary:
+                for structure in sorted_dictionary.keys():
                     print 'ADDING MORE TO CS'
                     print structure
                     self._add_structure_to_characteristic(structure)
@@ -135,6 +134,33 @@ class CharacteristicSubstructure(object):
             else:
                 length -= 1
         return self.characteristic_substructure
+
+    def find_all_representative_structures(self):
+        """
+        Creates a list of all the structure of different lengths which are representative sorted in terms of frequency
+
+        :return: list of structures which appear frequently in molecules
+        """
+        all_structures = {}
+        smiles_set = self._data_input()
+        paths = self._find_graphs_paths(smiles_set)
+        length = self.length_start
+        while length >= self.length_end:
+            representative_paths = self._find_representative_paths(paths, length)
+            print 'REPRESENTATIVE STRUCTURES'
+            sorted_dictionary = self._find_representative_structures(representative_paths)
+            print 'SORTED LIST'
+            print sorted_dictionary
+            # After considering paths of this length test to see if there are representative substructures
+            # If there are no rep structures then decrease stepwise, if there is increase the step size
+            if sorted_dictionary:
+                all_structures.update(sorted_dictionary)
+                length -= self.step
+            else:
+                length -= 1
+        representative_structures = OrderedDict(sorted(all_structures.items(), key=lambda x: x[1], reverse=True)).keys()
+        self._create_structures_file(representative_structures)
+        return representative_structures
 
     def _add_cs_locations(self, structure):
         """
@@ -152,10 +178,6 @@ class CharacteristicSubstructure(object):
                 if vertex in self.characteristic_substructure.adjacency_dictionary.keys():
                     self.cs_locations[molecule][self.path_structures[structure][molecule][vertex]] = vertex
 
-
-
-    # TODO restructure to check for my multiples and then go to either of 2 separate methods
-    # Leave swapping and location comparison in place 
     def _add_structure_to_characteristic(self, structure):
         """
         Adds the given structure to the characteristic substructure in the location where it appears most frequently
@@ -467,11 +489,27 @@ class CharacteristicSubstructure(object):
         reader.close()
         return smiles_set
 
-    def _data_output(self):
-        pass
+    def _dictionary_output(self, structure):
+        string_list = []
+        for vertex in structure.adjacency_dictionary:
+            string_list.append(str(vertex) + ':\n')
+            for neighbour in structure.neighbours(vertex):
+                string_list.append('        ' + str(neighbour) + ': ' + str(structure.adjacency_dictionary[vertex][neighbour]) + '\n')
+        display_string = ''.join(string_list)
+        return display_string
+
+    def _create_structures_file(self, structures):
+        string_list = []
+        counter = 0
+        for structure in structures:
+            string_list.append('Structure ' + str(counter))
+
+
+
 
 if __name__ == '__main__':
-    path_finder = CharacteristicSubstructure()
-    struct = path_finder.find_characteristic_substructure()
-    print struct.adjacency_dictionary
+    path_finder = CharacteristicSubstructure(threshold=0.7, step=1)
+    struct = path_finder.find_all_representative_structures()
+    print struct
+    print path_finder._dictionary_output(struct[0])
     #draw(struct)

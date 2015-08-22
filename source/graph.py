@@ -90,6 +90,8 @@ class Graph(object):
     def vertices(self):
         """
         Returns all the vertices of the graph
+
+        Performance: O(n)
         :return: a list of all the vertex objects present in the graph
         """
         return self.adjacency_dictionary.keys()
@@ -97,6 +99,8 @@ class Graph(object):
     def edges(self):
         """
         Returns all the edges of the graph in a set to remove duplicates
+
+        Performance: O(m)
         :return: a set of all the edge objects present in the graph
         """
         edges = set()
@@ -107,6 +111,8 @@ class Graph(object):
     def clear(self):
         """
         Clears all the parameters of the graph
+
+        Performance: O(1)
         :return: None
         """
         self.adjacency_dictionary = {}
@@ -115,7 +121,9 @@ class Graph(object):
 
     def add_vertex(self, element):
         """
-        Creates a new vertex object and adds it to the graph using the vertex_to_graph method
+        Creates a new vertex object and adds it to the graph using the vertex_to_graph method.
+
+        Performance: O(1)
         :param element: a string representing the element of the vertex
         :return: the vertex object which has been newly created
         """
@@ -126,7 +134,9 @@ class Graph(object):
     # TODO try for key error
     def vertex_to_graph(self, vertex):
         """
-        Adds a vertex object to the graph by assigning a dictionary which will contain all adjacent vertices and edges
+        Adds a vertex object to the graph by assigning a dictionary which will contain all adjacent vertices and edges.
+
+        Performance: O(1)
         :param vertex: the vertex object that is to be added to the graph
         :return: None
         """
@@ -136,7 +146,9 @@ class Graph(object):
 
     def remove_vertex(self, vertex):
         """
-        Delete the vertex object from the graph by removing it from the dictionaries of vertices which are adjacent
+        Delete the vertex object from the graph by removing it from the dictionaries of vertices which are adjacent.
+
+        Performance: O(degree of vertex)
         :param vertex: the vertex object that is to be removed
         :return: None
         """
@@ -144,35 +156,11 @@ class Graph(object):
             del self.adjacency_dictionary[neighbour][vertex]
         del self.adjacency_dictionary[vertex]
 
-    def swap_vertex(self, old_vertex, new_vertex):
-        """
-        Replace a vertex object in the graph with a different vertex.
-        Changes the instances of the vertex in the adjacency dictionary and in the paths for the graph
-        :param old_vertex: the vertex object that is to be removed
-        :param new_vertex: the vertex object that is to replace it
-        :return: None
-        """
-        self.adjacency_dictionary[new_vertex] = {}
-        for key in self.adjacency_dictionary[old_vertex]:
-            self.adjacency_dictionary[new_vertex][key] = copy(self.adjacency_dictionary[old_vertex][key])
-        for neighbour in self.neighbours(old_vertex):
-            self.adjacency_dictionary[neighbour][new_vertex] = copy(self.adjacency_dictionary[neighbour][old_vertex])
-        # Change any instances where the old vertex appears in the list of paths
-        if self.paths:
-            path_copy = copy(self.paths)
-            for path_tuple in self.paths:
-                if old_vertex in path_tuple[1]:
-                    tuple_index = self.paths.index(path_tuple)
-                    vertex_index = path_tuple[1].index(old_vertex)
-                    vertices_list = copy(path_tuple[1])
-                    vertices_list[vertex_index] = new_vertex
-                    path_copy[tuple_index] = (path_tuple[0], vertices_list)
-            self.paths = copy(path_copy)
-        self.remove_vertex(old_vertex)
-
     def add_edge(self, first_vertex, second_vertex, element=None):
         """
-        Create an edge object and add it to the graph using the edge_to_graph method
+        Create an edge object and add it to the graph using the edge_to_graph method.
+
+        Performance: O(1)
         :param first_vertex: a vertex object that is to be an endpoint of the edge
         :param second_vertex: a vertex object that is to be an endpoint of the edge
         :param element: the element of the edge object
@@ -184,7 +172,9 @@ class Graph(object):
 
     def edge_to_graph(self, first_vertex, second_vertex, edge):
         """
-        Adds an edge object to the graph by adding it to the adjacency dictionary entries for both of its endpoints
+        Adds an edge object to the graph by adding it to the adjacency dictionary entries for both of its endpoints.
+
+        Performance: O(1)
         :param first_vertex: one of the endpoints of the edge that is being added
         :param second_vertex: one of the endpoints of the edge that is being added
         :param edge: the edge that is to be added to the graph
@@ -196,7 +186,9 @@ class Graph(object):
 
     def remove_edge(self, first_vertex, second_vertex):
         """
-        Remove the edge that is found between the two given vertices
+        Remove the edge that is found between the two given vertices.
+
+        Performance: O(1)
         :param first_vertex:
         :param second_vertex:
         :return:
