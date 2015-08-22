@@ -5,6 +5,7 @@ from collections import OrderedDict, Counter
 from copy import copy, deepcopy
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
+from bitarray import bitarray
 #from draw_molecule import draw_molecule as draw
 
 
@@ -502,14 +503,26 @@ class CharacteristicSubstructure(object):
         string_list = []
         counter = 0
         for structure in structures:
-            string_list.append('Structure ' + str(counter))
-
-
+            string_list.append('Structure ' + str(counter) + '\n')
+            string_list.append(self._dictionary_output(structure) + '\n')
+            counter += 1
+        for molecule in self.molecules:
+            string_list.append(str(molecule) + ':       ')
+            membership = []
+            for structure in structures:
+                if molecule in self.path_structures[structure]:
+                    membership.append(True)
+                else:
+                    membership.append(False)
+            string_list.append(bitarray(membership).to01() + '\n')
+        display_string = ''.join(string_list)
+        writer = open('results.txt', mode='wb')
+        writer.write(display_string)
+        writer.close()
 
 
 if __name__ == '__main__':
-    path_finder = CharacteristicSubstructure(threshold=0.7, step=1)
+    path_finder = CharacteristicSubstructure(step=1)
     struct = path_finder.find_all_representative_structures()
     print struct
-    print path_finder._dictionary_output(struct[0])
     #draw(struct)
