@@ -5,10 +5,17 @@ import molecule
 # Contains the functions and variables required to parse a SMILES string into a molecule object
 # Follows the OpenSMILES specification [opensmiles.org]
 class Parser(object):
+    # Based upon the Frowns smiles parser created by Andrew Dalke
+    # Using the Frowns regular expression for element_symbols
+    element_symbols = \
+        r"C[laroudsemf]?|Os?|N[eaibdpos]?|S[icernbmg]?|P[drmtboau]?|"  \
+        r"H[eofgas]?|c|n|o|s|p|A[lrsgutcm]|B[eraik]?|Dy|E[urs]|F[erm]?|"  \
+        r"G[aed]|I[nr]?|Kr?|L[iaur]|M[gnodt]|R[buhenaf]|T[icebmalh]|" \
+        r"U|V|W|Xe|Yb?|Z[nr]|\*"
     smiles_string_pattern = re.compile(r"""(?P<square_atom>
                                             (?P<open_bracket>\[)
                                                 (?P<isotope>\d+)?
-                                                (?P<element>[A-Z][a-z]?
+                                                (?P<element>""" + element_symbols + r"""
                                                     |(?P<aromatic>b|c|n|o|p|s|se|as))
                                                 (?P<chiral>@|@@)?
                                                 (?P<hydrogen>[H])?
@@ -18,7 +25,7 @@ class Parser(object):
                                                 (?P<posdouble>[+][+])?
                                                 (?P<negdouble>[-][-])?
                                             (?P<close_bracket>\]))
-                                        |(?P<organic>Br|B|Cl|C|N|O|S|P|F|I
+                                        |(?P<organic>Br|Cl|B|C|N|O|S|P|F|I
                                             |(?P<oaromatic>b|c|n|o|s|p))
                                         |(?P<bond>
                                             (?P<single>-)|
