@@ -5,12 +5,7 @@ from collections import OrderedDict, Counter
 from copy import copy, deepcopy
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
-from bitarray import bitarray
-#from draw_molecule import draw_molecule as draw
-
-
 # from draw_molecule import draw_molecule as draw
-
 
 # Implementation of Finding Characteristic Substructures for Metabolite Classes
 # Ludwig, Hufsky, Elshamy, Böcker
@@ -89,10 +84,8 @@ class CharacteristicSubstructure(object):
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_dictionary:
                 all_structures.update(sorted_dictionary)
-            #     length -= self.step
-            # else:
-                # To get the structures of all lengths the step does not alter
-                length -= 1
+            # To get the structures of all lengths the step does not alter
+            length -= 1
         representative_structures = OrderedDict(sorted(all_structures.items(), key=lambda x: x[1], reverse=True)).keys()
         self._data_output(self._create_structures_results(representative_structures))
         return representative_structures
@@ -507,10 +500,10 @@ class CharacteristicSubstructure(object):
             membership = []
             for structure in structures:
                 if molecule in self.path_structures[structure]:
-                    membership.append(True)
+                    membership.append('1')
                 else:
-                    membership.append(False)
-            string_list.append(bitarray(membership).to01() + '\n')
+                    membership.append('0')
+            string_list.append('(' + ''.join(membership) + ')' + '\n')
         return string_list
 
     def _adjacency_dictionary_output(self, structure):
@@ -555,8 +548,18 @@ class CharacteristicSubstructure(object):
 
 
 if __name__ == '__main__':
-    path_finder = CharacteristicSubstructure(step=1)
-    struct = path_finder.find_characteristic_substructure()
-    print struct
-    print path_finder.characteristic_substructure.adjacency_dictionary.keys()
-    #draw(struct)
+    cs = CharacteristicSubstructure()
+    choice = raw_input('Enter 1 to receive the Characteristic Substructure or '
+                       '2 to receive the representative substructures: \n')
+    if choice == '1':
+        c_structure = cs.find_characteristic_substructure()
+        print c_structure.adjacency_dictionary.keys()
+    elif choice == '2':
+        threshold_choice = raw_input('Would you like to change the threshold for the '
+                                     'relative frequency of a structure in a molecule? y or n: \n')
+        if threshold_choice == 'y':
+            threshold = float(raw_input('Enter the new value for the '
+                                        'relative frequency threshold as a decimal in [0,1]: \n'))
+            cs.threshold = threshold
+        all_structures = cs.find_all_representative_structures()
+        print all_structures
