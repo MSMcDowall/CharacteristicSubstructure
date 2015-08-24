@@ -89,8 +89,9 @@ class CharacteristicSubstructure(object):
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_dictionary:
                 all_structures.update(sorted_dictionary)
-                length -= self.step
-            else:
+            #     length -= self.step
+            # else:
+                # To get the structures of all lengths the step does not alter
                 length -= 1
         representative_structures = OrderedDict(sorted(all_structures.items(), key=lambda x: x[1], reverse=True)).keys()
         self._data_output(self._create_structures_results(representative_structures))
@@ -175,11 +176,11 @@ class CharacteristicSubstructure(object):
         # used to find molecule vertices if structure is given
         new_molecule_map = {}
         for atom in vertices:
-            if isinstance(atom, m.Atom):
+            if not atom.aromatic:
                 new_atom = structure.add_atom(atom.element)
                 old_molecule_map[atom] = new_atom
                 new_molecule_map[new_atom] = atom
-            elif isinstance(atom, m.AromaticAtom):
+            elif atom.aromatic:
                 new_atom = structure.add_aromatic_atom(atom.element)
                 old_molecule_map[atom] = new_atom
                 new_molecule_map[new_atom] = atom
@@ -187,16 +188,17 @@ class CharacteristicSubstructure(object):
             for neighbour in vertices:
                 # Test if there is an edge to any of the other atoms in the path
                 edge = molecule.contains_edge(atom, neighbour)
-                if isinstance(edge, m.SingleBond):
-                    structure.add_single_bond(old_molecule_map[atom], old_molecule_map[neighbour])
-                elif isinstance(edge, m.DoubleBond):
-                    structure.add_double_bond(old_molecule_map[atom], old_molecule_map[neighbour])
-                elif isinstance(edge, m.TripleBond):
-                    structure.add_triple_bond(old_molecule_map[atom], old_molecule_map[neighbour])
-                elif isinstance(edge, m.QuadrupleBond):
-                    structure.add_quadruple_bond(old_molecule_map[atom], old_molecule_map[neighbour])
-                elif isinstance(edge, m.AromaticBond):
-                    structure.add_aromatic_bond(old_molecule_map[atom], old_molecule_map[neighbour])
+                if isinstance(edge, m.Bond):
+                    if edge.single:
+                        structure.add_single_bond(old_molecule_map[atom], old_molecule_map[neighbour])
+                    elif edge.double:
+                        structure.add_double_bond(old_molecule_map[atom], old_molecule_map[neighbour])
+                    elif edge.triple:
+                        structure.add_triple_bond(old_molecule_map[atom], old_molecule_map[neighbour])
+                    elif edge.quadruple:
+                        structure.add_quadruple_bond(old_molecule_map[atom], old_molecule_map[neighbour])
+                    elif edge.aromatic:
+                        structure.add_aromatic_bond(old_molecule_map[atom], old_molecule_map[neighbour])
         return structure, new_molecule_map
 
     def _check_structure_duplicates(self, pattern, molecule, vertices):
@@ -284,16 +286,17 @@ class CharacteristicSubstructure(object):
         for n in path_structure.vertices():
             g.add_node(n.position, element=n.element)
         for e in path_structure.edges():
-            if isinstance(e, m.SingleBond):
-                g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='single')
-            elif isinstance(e, m.DoubleBond):
-                g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='double')
-            elif isinstance(e, m.TripleBond):
-                g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='triple')
-            elif isinstance(e, m.QuadrupleBond):
-                g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='quadruple')
-            elif isinstance(e, m.AromaticBond):
-                g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='aromatic')
+            if isinstance(e, m.Bond):
+                if e.single:
+                    g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='single')
+                elif e.double:
+                    g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='double')
+                elif e.triple:
+                    g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='triple')
+                elif e.quadruple:
+                    g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='quadruple')
+                elif e.aromatic:
+                    g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='aromatic')
         self.structure_nx[path_structure] = g
 
     def _add_structure_to_multiple_dictionary(self, structure, molecule, mapping):
@@ -471,20 +474,14 @@ class CharacteristicSubstructure(object):
                 isomorphic_locations[possible] = 1
         return OrderedDict(sorted(isomorphic_locations.items(), key=lambda x: x[1], reverse=True)).keys()[0]
 
-    def _data_input(self):
-        """
-        Takes in a txt file, reads each line and stores the result in a list
-        
-        :return: a list of each of the lines of the text file
-        """
-        smiles_set = []
-        reader = open('SMILES.txt', mode='rb')
-        for line in reader:
-            smiles_set.append(line.rstrip())
-        reader.close()
-        return smiles_set
-
     def _create_cs_results(self):
+        """
+        Creates the strings which will be used in the results output after calling find_characteristic_substructure.
+
+        Uses the structures_results method to display the structures which are contained in the CS and the membership
+        of all the molecules
+        :return: list of display strings
+        """
         string_list = ['Characteristic Substructure\n',
                        self._adjacency_dictionary_output(self.characteristic_substructure) + '\n',
                        'Structures which have been added to Characteristic Substructure\n']
@@ -492,6 +489,13 @@ class CharacteristicSubstructure(object):
         return string_list
 
     def _create_structures_results(self, structures):
+        """
+        Creates the strings which will be used in the results output after calling find_all_representative_structures
+
+        Each molecule is presented with a bit array demonstrating the membership of the structures in the molecule
+        :param structures: list of the representative structures
+        :return: list of display strings
+        """
         string_list = []
         counter = 0
         for structure in structures:
@@ -509,13 +513,13 @@ class CharacteristicSubstructure(object):
             string_list.append(bitarray(membership).to01() + '\n')
         return string_list
 
-    def _data_output(self, string_list):
-        display_string = ''.join(string_list)
-        writer = open('results.txt', mode='wb')
-        writer.write(display_string)
-        writer.close()
-
     def _adjacency_dictionary_output(self, structure):
+        """
+        Creates a string format of the adjacency dictionary of the given structure
+
+        :param structure: molecule object which is the structure that is to be formatted
+        :return: string representation of the molecule
+        """
         string_list = []
         for vertex in structure.adjacency_dictionary:
             string_list.append(str(vertex) + ':\n')
@@ -524,9 +528,35 @@ class CharacteristicSubstructure(object):
         display_string = ''.join(string_list)
         return display_string
 
+    def _data_input(self):
+        """
+        Takes in a txt file, reads each line and stores the result in a list
+
+        :return: a list of each of the lines of the text file
+        """
+        smiles_set = []
+        reader = open('SMILES.txt', mode='rb')
+        for line in reader:
+            smiles_set.append(line.rstrip())
+        reader.close()
+        return smiles_set
+
+    def _data_output(self, string_list):
+        """
+        Writes a list of strings to a file creating the results.txt file
+
+        :param string_list: list of display strings
+        :return: None
+        """
+        display_string = ''.join(string_list)
+        writer = open('results.txt', mode='wb')
+        writer.write(display_string)
+        writer.close()
+
 
 if __name__ == '__main__':
     path_finder = CharacteristicSubstructure(step=1)
     struct = path_finder.find_characteristic_substructure()
+    print struct
     print path_finder.characteristic_substructure.adjacency_dictionary.keys()
     #draw(struct)

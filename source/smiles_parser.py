@@ -120,9 +120,9 @@ class Parser(object):
 
     # Tests if a single or an aromatic bond should be added to an aromatic atom
     def add_bond_to_aromatic_atom(self, atom, mole):
-        if isinstance(self._previous_atom, molecule.AromaticAtom):
+        if self._previous_atom.aromatic:
             mole.add_aromatic_bond(self._previous_atom, atom)
-        elif self._previous_atom is not None and not isinstance(self._previous_atom, molecule.AromaticAtom):
+        elif self._previous_atom is not None and not self._previous_atom.aromatic:
             mole.add_single_bond(self._previous_atom, atom)
 
     # Called when a number is encountered that is not in square brackets
@@ -135,7 +135,7 @@ class Parser(object):
             ring_atom = self._break_points[number][0]
             ring_bond = self._break_points[number][1]
             if ring_bond is None and self._previous_bond is None:    # No bond symbol has been specified
-                if isinstance(ring_atom, molecule.AromaticAtom):
+                if ring_atom.aromatic:
                     self.add_bond_to_aromatic_atom(ring_atom, mole)
                 else:
                     mole.add_single_bond(self._previous_atom, ring_atom)
@@ -186,8 +186,7 @@ class Parser(object):
                 self.dot()
         return mol
 
-# if __name__ == '__main__':
-#     mole = Parser().parse_smiles('CNO')
-#     print mole._vertices
-#     mole.find_all_paths()
-#     print mole.paths
+if __name__ == '__main__':
+    mole = Parser().parse_smiles('CNO')
+    mole.find_all_paths()
+    print mole.create_smiles()

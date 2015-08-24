@@ -12,15 +12,15 @@ def draw_molecule(mole):
     for n in mole.vertices():
         g.add_node(n.position, element=n.element)
     for e in mole.edges():
-        if isinstance(e, molecule.SingleBond):
+        if e.single:
             g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='single')
-        elif isinstance(e, molecule.DoubleBond):
+        elif e.double:
             g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='double')
-        elif isinstance(e, molecule.TripleBond):
+        elif e.triple:
             g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='triple')
-        elif isinstance(e, molecule.QuadrupleBond):
+        elif e.quadruple:
             g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='quadruple')
-        elif isinstance(e, molecule.AromaticBond):
+        elif e.aromatic:
             g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='aromatic')
 
     # Set the layout

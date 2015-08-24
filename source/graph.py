@@ -199,6 +199,7 @@ class Graph(object):
     def neighbours(self, vertex):
         """
         Returns the vertices adjacent to the given vertex in the graph
+
         :param vertex: the vertex whose neighbours are to be found
         :return: a list of vertex objects adjacent to the vertex
         """
@@ -207,6 +208,7 @@ class Graph(object):
     def connecting_edges(self, vertex):
         """
         Returns the edges which are attached to the given vertex in the graph
+
         :param vertex: the vertex whose attached edges are to be found
         :return: a list of edge objects which are attached to the given vertex
         """
@@ -215,6 +217,7 @@ class Graph(object):
     def degree(self, vertex):
         """
         Returns the degree of the given vertex which is the number of edges that are attached to the vertex
+
         :param vertex: the vertex object whose degree is to be returned
         :return: an integer which is the number of edges attached to the vertex
         """
@@ -223,6 +226,7 @@ class Graph(object):
     def contains_edge(self, first_vertex, second_vertex):
         """
         Test if there is an edge joining two vertices in the graph
+
         :param first_vertex: a vertex that is to be tested for a connection
         :param second_vertex: a vertex that is to be tested for a connection
         :return: an edge object which joins the two given vertices
@@ -235,6 +239,7 @@ class Graph(object):
     def find_all_paths(self):
         """
         Finds all the possible paths in a graph using a depth first search
+
         The depth first search is carried out starting from each vertex of the graph so all path combinations are found
         Algorithm structure from Handbook of Graph Theory, Gross & Yellen
         :return: a dictionary containing the strings representing the paths and their lengths as the value
