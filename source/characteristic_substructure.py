@@ -12,10 +12,9 @@ import networkx.algorithms.isomorphism as iso
 # Ludwig, Hufsky, Elshamy, Böcker
 
 class CharacteristicSubstructure(object):
-    def __init__(self, smiles_file="SMILES.txt", results_file="results.txt", length_start=20, length_end=5, threshold=0.8):
+    def __init__(self, smiles_file="SMILES.txt", length_start=20, length_end=5, threshold=0.8):
         # The file containing the SMILES strings
         self.smiles_file = smiles_file
-        self.results_file = results_file
         # The initial parameters for the algorithm
         self.length_start = length_start
         self.length_end = length_end
@@ -68,7 +67,7 @@ class CharacteristicSubstructure(object):
                 length -= self.step
             else:
                 length -= 1
-        self._data_output(self._create_cs_results())
+        self._data_output(self._create_cs_results(), 'CharacteristicSubstructure.txt')
         return self.characteristic_substructure
 
     def find_all_representative_structures(self):
@@ -91,7 +90,7 @@ class CharacteristicSubstructure(object):
             # To get the structures of all lengths the step does not alter
             length -= 1
         representative_structures = OrderedDict(sorted(all_structures.items(), key=lambda x: x[1], reverse=True)).keys()
-        self._data_output(self._create_structures_results(representative_structures))
+        self._data_output(self._structures_output(representative_structures), 'RepresentativeStructures.txt')
         return representative_structures
 
     def _find_graphs_paths(self, smiles_set):
@@ -482,10 +481,10 @@ class CharacteristicSubstructure(object):
         string_list = ['Characteristic Substructure\n',
                        self._adjacency_dictionary_output(self.characteristic_substructure) + '\n',
                        'Structures which have been added to Characteristic Substructure\n']
-        string_list.extend(self._create_structures_results(self.cs_structures))
+        string_list.extend(self._structures_output(self.cs_structures))
         return string_list
 
-    def _create_structures_results(self, structures):
+    def _structures_output(self, structures):
         """
         Creates the strings which will be used in the results output after calling find_all_representative_structures
 
@@ -538,39 +537,29 @@ class CharacteristicSubstructure(object):
         reader.close()
         return smiles_set
 
-    def _data_output(self, string_list):
+    def _data_output(self, string_list, file_name):
         """
-        Writes a list of strings to a file creating the results.txt file
+        Writes a list of strings to a file with the given filename
 
         :param string_list: list of display strings
         :return: None
         """
         display_string = ''.join(string_list)
-        writer = open(self.results_file, mode='wb')
+        writer = open(file_name, mode='wb')
         writer.write(display_string)
         writer.close()
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        cs = CharacteristicSubstructure()
-    elif len(sys.argv) == 2:
+    if len(sys.argv) == 2:
         cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
     elif len(sys.argv) == 3:
-        cs = CharacteristicSubstructure(smiles_file=sys.argv[1], results_file=sys.argv[2])
-    choice = raw_input('Enter 1 to receive the characteristic substructure or '
-                       '2 to receive all the representative substructures: \n')
-    if choice == '1':
-        c_structure = cs.find_characteristic_substructure()
-        print c_structure.adjacency_dictionary.keys()
-    elif choice == '2':
-        threshold_choice = raw_input('Would you like to change the threshold for the '
-                                     'relative frequency of a structure in the molecules? y or n: \n')
-        if threshold_choice == 'y':
-            new_threshold = float(raw_input('Enter the new value for the '
-                                        'relative frequency threshold as a decimal in [0,1]: \n'))
-            cs.threshold = new_threshold
-        all_structures = cs.find_all_representative_structures()
-        print all_structures
+        cs = CharacteristicSubstructure(smiles_file=sys.argv[1], threshold=sys.argv[2])
     else:
-        print 'Not a valid command'
+        cs = CharacteristicSubstructure()
+    c_structure = cs.find_characteristic_substructure()
+    all_structures = cs.find_all_representative_structures()
+    print 'Characteristic Substructure'
+    print c_structure.adjacency_dictionary.keys()
+    print 'Representative Structures'
+    print all_structures
