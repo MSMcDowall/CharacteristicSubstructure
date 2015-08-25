@@ -64,7 +64,7 @@ class CharacteristicSubstructure(object):
                 length -= self.step
             else:
                 length -= 1
-        self._data_output(self._create_cs_results())
+        self._data_output(self._create_cs_results(), 'CharacteristicSubstructure.txt')
         return self.characteristic_substructure
 
     def find_all_representative_structures(self):
@@ -87,7 +87,7 @@ class CharacteristicSubstructure(object):
             # To get the structures of all lengths the step does not alter
             length -= 1
         representative_structures = OrderedDict(sorted(all_structures.items(), key=lambda x: x[1], reverse=True)).keys()
-        self._data_output(self._create_structures_results(representative_structures))
+        self._data_output(self._structures_output(representative_structures), 'RepresentativeStructures.txt')
         return representative_structures
 
     def _find_graphs_paths(self, smiles_set):
@@ -478,10 +478,10 @@ class CharacteristicSubstructure(object):
         string_list = ['Characteristic Substructure\n',
                        self._adjacency_dictionary_output(self.characteristic_substructure) + '\n',
                        'Structures which have been added to Characteristic Substructure\n']
-        string_list.extend(self._create_structures_results(self.cs_structures))
+        string_list.extend(self._structures_output(self.cs_structures))
         return string_list
 
-    def _create_structures_results(self, structures):
+    def _structures_output(self, structures):
         """
         Creates the strings which will be used in the results output after calling find_all_representative_structures
 
@@ -534,32 +534,24 @@ class CharacteristicSubstructure(object):
         reader.close()
         return smiles_set
 
-    def _data_output(self, string_list):
+    def _data_output(self, string_list, file_name):
         """
-        Writes a list of strings to a file creating the results.txt file
+        Writes a list of strings to a file with the given filename
 
         :param string_list: list of display strings
         :return: None
         """
         display_string = ''.join(string_list)
-        writer = open('results.txt', mode='wb')
+        writer = open(file_name, mode='wb')
         writer.write(display_string)
         writer.close()
 
 
 if __name__ == '__main__':
     cs = CharacteristicSubstructure()
-    choice = raw_input('Enter 1 to receive the Characteristic Substructure or '
-                       '2 to receive the representative substructures: \n')
-    if choice == '1':
-        c_structure = cs.find_characteristic_substructure()
-        print c_structure.adjacency_dictionary.keys()
-    elif choice == '2':
-        threshold_choice = raw_input('Would you like to change the threshold for the '
-                                     'relative frequency of a structure in a molecule? y or n: \n')
-        if threshold_choice == 'y':
-            threshold = float(raw_input('Enter the new value for the '
-                                        'relative frequency threshold as a decimal in [0,1]: \n'))
-            cs.threshold = threshold
-        all_structures = cs.find_all_representative_structures()
-        print all_structures
+    c_structure = cs.find_characteristic_substructure()
+    all_structures = cs.find_all_representative_structures()
+    print 'Characteristic Substructure'
+    print c_structure.adjacency_dictionary.keys()
+    print 'Representative Structures'
+    print all_structures
