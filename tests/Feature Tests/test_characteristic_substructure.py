@@ -1,6 +1,7 @@
 import source.characteristic_substructure as cs
 import unittest
 
+
 class CharacteristicSubstructureTestCase(unittest.TestCase):
     def setUp(self):
         pass

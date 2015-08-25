@@ -1,4 +1,5 @@
 import graph
+from collections import deque
 
 
 # Represents an atom within the molecule, includes the atoms chemical properties
@@ -94,32 +95,73 @@ class Molecule(graph.Graph):
         return new_aromatic_bond
 
     def create_smiles(self):
+        # Arbitrary vertex picked as the starting point
         start = self.adjacency_dictionary.keys()[0]
-        dictionary = {start: None}
+        parent = {}
         cycles = {}
-        ring_number = 1
-        self._depth_first_search(start, dictionary, cycles, ring_number)
+        self._find_spanning_tree(start, parent, cycles)
+        print parent
         print cycles
-        return dictionary
+        # if len(parent) < self.size:
+        #     parent = {}
+        #     for u in self.adjacency_dictionary:
+        #         if u not in parent:
+        #             parent[u] = None
+        #             self._find_spanning_tree(u, parent, cycles)
+        # When vertex has a parent is None and isn't the start vertex then it is a dot break
 
-    # Based on Algorithms and Data Structures implementation of the DFS
-    def _depth_first_search(self, vertex, discovered, cycles, ring_number):
-        for e in self.connecting_edges(vertex):
-            v = e.opposite(vertex)
-            if v not in discovered:
-                discovered[v] = e
-                self._depth_first_search(v, discovered, cycles, ring_number)
-            else:
+    def _find_spanning_tree(self, s, parent, cycles):
+        ring_number = 1
+        parent[s] = None
+        for v in self.vertices()[1:]:
+            print 'starting here'
+            print v
+            if v not in parent:
+                print 'deary'
+                self._tree_visit(v, v, parent, cycles, ring_number)
+
+    def _tree_visit(self, v, origin, parent, cycles, ring_number):
+        for w in self.adjacency_dictionary[v]:
+            print w
+            print origin
+            print v
+            if w == origin and w != v:
+                print 'cycle'
                 if v in cycles:
                     string = cycles[v] + str(ring_number)
                     cycles[v] = string
                 else:
                     cycles[v] = str(ring_number)
-                if e in cycles:
-                    string = cycles[e] + str(ring_number)
-                    cycles[e] = string
+                if origin in cycles:
+                    string = cycles[origin] + str(ring_number)
+                    cycles[origin] = string
                 else:
-                    cycles[e] = str(ring_number)
+                    cycles[origin] = str(ring_number)
                 ring_number += 1
+            if w not in parent:
+                print 'not a cycle'
+                parent[w] = v
+                self._tree_visit(w, origin, parent, cycles, ring_number)
+
+
+    # # Based on Algorithms and Data Structures implementation of the DFS
+    # def _depth_first_search(self, vertex, discovered, cycles, ring_number):
+    #     for e in self.connecting_edges(vertex):
+    #         v = e.opposite(vertex)
+    #         if v not in discovered:
+    # #             discovered[v] = e
+    # #             self._depth_first_search(v, discovered, cycles, ring_number)
+    # #         else:
+    #             if v in cycles:
+    #                 string = cycles[v] + str(ring_number)
+    #                 cycles[v] = string
+    #             else:
+    #                 cycles[v] = str(ring_number)
+    #             if e in cycles:
+    #                 string = cycles[e] + str(ring_number)
+    #                 cycles[e] = string
+    #             else:
+    #                 cycles[e] = str(ring_number)
+    #             ring_number += 1
 
 

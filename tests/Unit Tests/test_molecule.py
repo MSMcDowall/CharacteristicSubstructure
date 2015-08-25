@@ -8,7 +8,7 @@ class AtomTestCase(unittest.TestCase):
         self.assertEqual(self.a.hydrogen, 2)
 
     def test_aromatic_atom_creation(self):
-        self.a = molecule.AromaticAtom('c', 12)
+        self.a = molecule.Atom('c', 12, aromatic=True)
         self.assertEqual(self.a.element, 'c')
         self.assertEqual(self.a.isotope, 12)
 
@@ -18,27 +18,28 @@ class BondTestCase(unittest.TestCase):
         self.y = molecule.Atom('N')
 
     def test_single_bond_creation(self):
-        self.b = molecule.SingleBond(self.x, self.y)
+        self.b = molecule.Bond(self.x, self.y, single=True)
         self.assertEqual(self.b.endpoints, (self.x, self.y))       # Test for access to base class methods
-        self.assertEqual(self.b.opposite(self.x), self.y)          # Test for access to base class methods
+        self.assertEqual(self.b.opposite(self.x), self.y)
+        self.assertEqual(self.b.single, True)
 
     def test_double_bond_creation(self):
-        self.b = molecule.DoubleBond(self.x, self.y)
+        self.b = molecule.Bond(self.x, self.y, double=True)
         self.assertEqual(self.b.endpoints, (self.x, self.y))
         self.assertEqual(self.b.opposite(self.x), self.y)
 
     def test_triple_bond_creation(self):
-        self.b = molecule.TripleBond(self.x, self.y)
+        self.b = molecule.Bond(self.x, self.y, triple=True)
         self.assertEqual(self.b.endpoints, (self.x, self.y))
         self.assertEqual(self.b.opposite(self.x), self.y)
 
     def test_quadruple_bond_creation(self):
-        self.b = molecule.QuadrupleBond(self.x, self.y)
+        self.b = molecule.Bond(self.x, self.y, quadruple=True)
         self.assertEqual(self.b.endpoints, (self.x, self.y))
         self.assertEqual(self.b.opposite(self.x), self.y)
 
     def test_aromatic_bond_creation(self):
-        self.b = molecule.AromaticBond(self.x, self.y)
+        self.b = molecule.Bond(self.x, self.y, aromatic=True)
         self.assertEqual(self.b.endpoints, (self.x, self.y))
         self.assertEqual(self.b.opposite(self.x), self.y)
 

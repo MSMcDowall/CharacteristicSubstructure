@@ -187,6 +187,5 @@ class Parser(object):
         return mol
 
 if __name__ == '__main__':
-    mole = Parser().parse_smiles('CNO')
-    mole.find_all_paths()
-    print mole.create_smiles()
+    mole = Parser().parse_smiles('C1NOBClF1')
+    mole.create_smiles()

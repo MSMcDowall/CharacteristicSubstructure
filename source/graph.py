@@ -252,11 +252,11 @@ class Graph(object):
                     w.visited = False       # Start search anew for each root
                 path_stack = []             # Used to create the string of the path
                 position_stack = []         # Used to create the string of positions
-                self._visit(v, path_stack, position_stack, all_paths)
+                self._path_visit(v, path_stack, position_stack, all_paths)
                 completed.append(v)
         return all_paths
 
-    def _visit(self, v, path_stack, position_stack, all_paths):
+    def _path_visit(self, v, path_stack, position_stack, all_paths):
         """
         The recursive element of the find_all_paths method.
         As each new path is found the string representing it is created using the path_stack.
@@ -270,9 +270,9 @@ class Graph(object):
         v.visited = True
         path_stack.append(v.element + '-')
         position_stack.append(v)
-        for w in self.adjacency_dictionary[v].keys():
+        for w in self.adjacency_dictionary[v]:
             if not w.visited:
-                self._visit(w, path_stack, position_stack, all_paths)
+                self._path_visit(w, path_stack, position_stack, all_paths)
         letters = ''.join(path_stack)
         path = letters[:-1]    # Remove final dash to make string more readable
         positions = list(position_stack)

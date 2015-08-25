@@ -2,7 +2,8 @@
 from smiles_parser import Parser
 import molecule as m
 from collections import OrderedDict, Counter
-from copy import copy, deepcopy
+from copy import copy
+import sys
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
 # from draw_molecule import draw_molecule as draw
@@ -11,13 +12,16 @@ import networkx.algorithms.isomorphism as iso
 # Ludwig, Hufsky, Elshamy, Böcker
 
 class CharacteristicSubstructure(object):
-    def __init__(self, length_start=20, length_end=5, step=4, threshold=0.8, isomorphism_factor=0.8):
+    def __init__(self, smiles_file="SMILES.txt", results_file="results.txt", length_start=20, length_end=5, threshold=0.8):
+        # The file containing the SMILES strings
+        self.smiles_file = smiles_file
+        self.results_file = results_file
         # The initial parameters for the algorithm
         self.length_start = length_start
         self.length_end = length_end
-        self.step = step
+        self.step = 4
         self.threshold = threshold
-        self.isomorphism_factor = isomorphism_factor
+        self.isomorphism_factor = 0.8
 
         # The structure which has been created through the combination of representative path structures
         self.characteristic_substructure = m.Molecule('Characteristic Substructure')
@@ -528,7 +532,7 @@ class CharacteristicSubstructure(object):
         :return: a list of each of the lines of the text file
         """
         smiles_set = []
-        reader = open('SMILES.txt', mode='rb')
+        reader = open(self.smiles_file, mode='rb')
         for line in reader:
             smiles_set.append(line.rstrip())
         reader.close()
@@ -542,24 +546,31 @@ class CharacteristicSubstructure(object):
         :return: None
         """
         display_string = ''.join(string_list)
-        writer = open('results.txt', mode='wb')
+        writer = open(self.results_file, mode='wb')
         writer.write(display_string)
         writer.close()
 
 
 if __name__ == '__main__':
-    cs = CharacteristicSubstructure()
-    choice = raw_input('Enter 1 to receive the Characteristic Substructure or '
-                       '2 to receive the representative substructures: \n')
+    if len(sys.argv) == 1:
+        cs = CharacteristicSubstructure()
+    elif len(sys.argv) == 2:
+        cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
+    elif len(sys.argv) == 3:
+        cs = CharacteristicSubstructure(smiles_file=sys.argv[1], results_file=sys.argv[2])
+    choice = raw_input('Enter 1 to receive the characteristic substructure or '
+                       '2 to receive all the representative substructures: \n')
     if choice == '1':
         c_structure = cs.find_characteristic_substructure()
         print c_structure.adjacency_dictionary.keys()
     elif choice == '2':
         threshold_choice = raw_input('Would you like to change the threshold for the '
-                                     'relative frequency of a structure in a molecule? y or n: \n')
+                                     'relative frequency of a structure in the molecules? y or n: \n')
         if threshold_choice == 'y':
-            threshold = float(raw_input('Enter the new value for the '
+            new_threshold = float(raw_input('Enter the new value for the '
                                         'relative frequency threshold as a decimal in [0,1]: \n'))
-            cs.threshold = threshold
+            cs.threshold = new_threshold
         all_structures = cs.find_all_representative_structures()
         print all_structures
+    else:
+        print 'Not a valid command'
