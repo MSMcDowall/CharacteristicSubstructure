@@ -1,4 +1,4 @@
-#Characteristic Substructure Applcation
+#Characteristic Substructure Application
 
 Created by Mary McDowall as part of MSc IT degree.
 
