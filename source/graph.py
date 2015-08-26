@@ -4,6 +4,8 @@ from copy import copy
 """
 This module contains a graph implemented with an adjacency dictionary
 and the edge and vertex objects which can be added to the graph.
+Based on the Graph ADT in 'Algorithms and Data Structures in Python'
+by  Michael T. Goodrich, Roberto Tamassia, Michael H. Goldwasser
 """
 
 

@@ -14,6 +14,14 @@ Created by Mary McDowall as part of MSc IT degree.
     
     The frequency threshold below sets the percentage of molecules that a subgraph must appear in for it be considered
     representative. The default is set at 80% of the molecules. 
+    
+##Input/Output
+
+    The SMILES data can either be copied into the SMILES.txt file within the directory (the default input file)
+    or an alternative can be specified as a command line argument.
+    
+    The results file names will consist of the input file (without the extension) and their results type.
+    Example: SMILES_CharacteristicSubstructure.txt or SMILES_RepresentativeStructures.txt 
 
 ###To find both the characteristic substructure and the representative substructures:
 
@@ -26,6 +34,11 @@ Created by Mary McDowall as part of MSc IT degree.
 ###To find just the representative substructures (must specify SMILES file name):
 
     python source/algorithm.py SMILES_file_name 1 [Frequency threshold in [0,1], default:0.8]
+    
+##Dependencies
+
+    NetworkX is required to run the algorithm.py file as it provides the subgraph isomorphism algorithm
+    MatplotLib is required if the user wishes to draw the molecule though it is not required to run the algorithm.py
     
 ##Contents 
 

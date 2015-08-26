@@ -68,7 +68,7 @@ class CharacteristicSubstructure(object):
             else:
                 length -= 1
         # TODO include smiles_file name in results filename
-        self._data_output(self._create_cs_results(), self.smiles_file[:-4] + 'CharacteristicSubstructure.txt')
+        self._data_output(self._create_cs_results(), self.smiles_file[:-4] + '_CharacteristicSubstructure.txt')
         return self.characteristic_substructure
 
     def find_all_representative_structures(self):
@@ -92,7 +92,7 @@ class CharacteristicSubstructure(object):
             length -= 1
         representative_structures = OrderedDict(sorted(all_structures.items(), key=lambda x: x[1], reverse=True)).keys()
         self._data_output(self._structures_output(representative_structures),
-                          self.smiles_file[:-4] + 'RepresentativeStructures.txt')
+                          self.smiles_file[:-4] + '_RepresentativeStructures.txt')
         return representative_structures
 
     def _find_graphs_paths(self, smiles_set):
