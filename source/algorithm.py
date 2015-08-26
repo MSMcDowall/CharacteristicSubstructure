@@ -557,29 +557,29 @@ if __name__ == '__main__':
     c_structure = None
     all_structures = None
     if len(sys.argv) == 2:
-        # Command: python characteristic_substructure.py smiles_file
+        # Command: python algorithm.py smiles_file
         cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
         c_structure = cs.find_characteristic_substructure()
         all_structures = cs.find_all_representative_structures()
     elif len(sys.argv) == 3:
-        # Command: python characteristic_substructure.py smiles_file 0.6
+        # Command: python algorithm.py smiles_file 0.6
         # Specify threshold but both characteristic substructure and representative structures are given
         if 0 < float(sys.argv[2]) < 1:
             cs = CharacteristicSubstructure(smiles_file=sys.argv[1], threshold=float(sys.argv[2]))
             c_structure = cs.find_characteristic_substructure()
             all_structures = cs.find_all_representative_structures()
-        # Command: python characteristic_substructure.py smiles_file 0
+        # Command: python algorithm.py smiles_file 0
         # 0 signifies that the user wants to receive the characteristic substructure
         elif sys.argv[2] == '0':
             cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
             c_structure = cs.find_characteristic_substructure()
-        # Command: python characteristic_substructure.py smiles_file 1
+        # Command: python algorithm.py smiles_file 1
         # 1 signifies that the user wants to receive the representative structures
         elif sys.argv[2] == '1':
             cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
             all_structures = cs.find_all_representative_structures()
     elif len(sys.argv) == 4:
-        # Command: python characteristic_substructure.py smiles_file 0/1 0.6
+        # Command: python algorithm.py smiles_file 0/1 0.6
         # O for characteristic substructure, 1 for representative structures
         cs = CharacteristicSubstructure(smiles_file=sys.argv[1], threshold=float(sys.argv[3]))
         if sys.argv[2] == '0':

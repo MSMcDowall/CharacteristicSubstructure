@@ -1,4 +1,4 @@
-import source.characteristic_substructure as cs
+import source.algorithm as cs
 import unittest
 
 
