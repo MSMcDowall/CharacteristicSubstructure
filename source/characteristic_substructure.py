@@ -67,7 +67,8 @@ class CharacteristicSubstructure(object):
                 length -= self.step
             else:
                 length -= 1
-        self._data_output(self._create_cs_results(), 'CharacteristicSubstructure.txt')
+        # TODO include smiles_file name in results filename
+        self._data_output(self._create_cs_results(), self.smiles_file[:-4] + 'CharacteristicSubstructure.txt')
         return self.characteristic_substructure
 
     def find_all_representative_structures(self):
@@ -90,7 +91,8 @@ class CharacteristicSubstructure(object):
             # To get the structures of all lengths the step does not alter
             length -= 1
         representative_structures = OrderedDict(sorted(all_structures.items(), key=lambda x: x[1], reverse=True)).keys()
-        self._data_output(self._structures_output(representative_structures), 'RepresentativeStructures.txt')
+        self._data_output(self._structures_output(representative_structures),
+                          self.smiles_file[:-4] + 'RepresentativeStructures.txt')
         return representative_structures
 
     def _find_graphs_paths(self, smiles_set):
@@ -533,7 +535,8 @@ class CharacteristicSubstructure(object):
         smiles_set = []
         reader = open(self.smiles_file, mode='rb')
         for line in reader:
-            smiles_set.append(line.rstrip())
+            words = line.split(" ")
+            smiles_set.append(words[0])
         reader.close()
         return smiles_set
 
@@ -551,15 +554,46 @@ class CharacteristicSubstructure(object):
 
 
 if __name__ == '__main__':
+    c_structure = None
+    all_structures = None
     if len(sys.argv) == 2:
+        # Command: python characteristic_substructure.py smiles_file
         cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
+        c_structure = cs.find_characteristic_substructure()
+        all_structures = cs.find_all_representative_structures()
     elif len(sys.argv) == 3:
-        cs = CharacteristicSubstructure(smiles_file=sys.argv[1], threshold=sys.argv[2])
+        # Command: python characteristic_substructure.py smiles_file 0.6
+        # Specify threshold but both characteristic substructure and representative structures are given
+        if 0 < float(sys.argv[2]) < 1:
+            cs = CharacteristicSubstructure(smiles_file=sys.argv[1], threshold=float(sys.argv[2]))
+            c_structure = cs.find_characteristic_substructure()
+            all_structures = cs.find_all_representative_structures()
+        # Command: python characteristic_substructure.py smiles_file 0
+        # 0 signifies that the user wants to receive the characteristic substructure
+        elif sys.argv[2] == '0':
+            cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
+            c_structure = cs.find_characteristic_substructure()
+        # Command: python characteristic_substructure.py smiles_file 1
+        # 1 signifies that the user wants to receive the representative structures
+        elif sys.argv[2] == '1':
+            cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
+            all_structures = cs.find_all_representative_structures()
+    elif len(sys.argv) == 4:
+        # Command: python characteristic_substructure.py smiles_file 0/1 0.6
+        # O for characteristic substructure, 1 for representative structures
+        cs = CharacteristicSubstructure(smiles_file=sys.argv[1], threshold=float(sys.argv[3]))
+        if sys.argv[2] == '0':
+            c_structure = cs.find_characteristic_substructure()
+        elif sys.argv[2] == '1':
+            all_structures = cs.find_all_representative_structures()
     else:
         cs = CharacteristicSubstructure()
-    c_structure = cs.find_characteristic_substructure()
-    all_structures = cs.find_all_representative_structures()
-    print 'Characteristic Substructure'
-    print c_structure.adjacency_dictionary.keys()
-    print 'Representative Structures'
-    print all_structures
+        c_structure = cs.find_characteristic_substructure()
+        all_structures = cs.find_all_representative_structures()
+
+    if c_structure:
+        print 'Characteristic Substructure'
+        print c_structure.adjacency_dictionary.keys()
+    if all_structures:
+        print 'Representative Structures'
+        print all_structures
