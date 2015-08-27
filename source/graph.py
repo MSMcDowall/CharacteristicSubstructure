@@ -238,6 +238,19 @@ class Graph(object):
         else:
             return False
 
+    def vertex_position(self, position):
+        """
+        Tests if there is a vertex at that position
+
+        :param position: an integer which is to be tested
+        :return: a vertex if it had has the given position
+        """
+        for vertex in self.vertices():
+            if vertex.position == position:
+                return vertex
+        else:
+            return False
+
     def find_all_paths(self):
         """
         Finds all the possible paths in a graph using a depth first search

@@ -1,4 +1,4 @@
-import source.graph as graph
+from ...source import graph
 import unittest
 
 
@@ -32,9 +32,6 @@ class GraphTestCase(unittest.TestCase):
         self.x = self.g.add_vertex('C')
         self.y = self.g.add_vertex('N')
         self.e = self.g.add_edge(self.x, self.y, 2)
-
-    def test_graph_creation(self):
-        pass
 
     def test_clear(self):
         self.g.clear()

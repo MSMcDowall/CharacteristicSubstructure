@@ -1,5 +1,6 @@
-import source.molecule as molecule
+from ...source import molecule
 import unittest
+
 
 class AtomTestCase(unittest.TestCase):
     def test_atom_creation(self):
@@ -11,6 +12,7 @@ class AtomTestCase(unittest.TestCase):
         self.a = molecule.Atom('c', 12, aromatic=True)
         self.assertEqual(self.a.element, 'c')
         self.assertEqual(self.a.isotope, 12)
+
 
 class BondTestCase(unittest.TestCase):
     def setUp(self):
