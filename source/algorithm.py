@@ -6,12 +6,13 @@ from copy import copy
 import sys
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
-# from draw_molecule import draw_molecule as draw
+from draw_molecule import draw_molecule as draw
 
 # Implementation of Finding Characteristic Substructures for Metabolite Classes
 # Ludwig, Hufsky, Elshamy, Böcker
 
-class CharacteristicSubstructure(object):
+
+class CSAlgorithm(object):
     def __init__(self, smiles_file="SMILES.txt", length_start=20, length_end=5, threshold=0.8):
         # The file containing the SMILES strings
         self.smiles_file = smiles_file
@@ -57,6 +58,7 @@ class CharacteristicSubstructure(object):
         paths = self._find_graphs_paths(smiles_set)
         length = self.length_start
         while length >= self.length_end:
+            print length
             representative_paths = self._find_representative_paths(paths, length)
             sorted_dictionary = self._find_representative_structures(representative_paths)
             # After considering paths of this length test to see if there are representative substructures
@@ -67,7 +69,7 @@ class CharacteristicSubstructure(object):
                 length -= self.step
             else:
                 length -= 1
-        # TODO include smiles_file name in results filename
+            self.path_structures = {}
         self._data_output(self._create_cs_results(), self.smiles_file[:-4] + '_CharacteristicSubstructure.txt')
         return self.characteristic_substructure
 
@@ -244,7 +246,6 @@ class CharacteristicSubstructure(object):
         self.path_structures = temporary_structure_dict.copy()
         return unique_structure
 
-    # TODO Create error calling without making structure
     def _nx_isomorphism(self, pattern, target):
         """
         Uses the NetworkX isomorphism algorithm to check if the pattern graph and the target graph are isomorphic.
@@ -256,10 +257,8 @@ class CharacteristicSubstructure(object):
         :return: a dictionary which maps the indices of the two NetworkX graphs together if they are isomorphic
         """
         if pattern not in self.structure_nx:
-            #self._update_position(pattern)
             self._create_nx_graph(pattern)
         if target not in self.structure_nx:
-            #self._update_position(target)
             self._create_nx_graph(target)
         if not nx.faster_could_be_isomorphic(self.structure_nx[pattern], self.structure_nx[target]):
             # Graphs are definitely not isomorphic
@@ -297,37 +296,6 @@ class CharacteristicSubstructure(object):
                     g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='aromatic')
         self.structure_nx[path_structure] = g
 
-    def _add_structure_to_multiple_dictionary(self, structure, molecule, mapping):
-        """
-        Adds a structure which has appeared more than once in a molecule to the multiple_structures dictionary
-
-        :param structure: the structure which has appeared more than once in a molecule
-        :param molecule: the molecule that has repeated instances of the structure
-        :param mapping: a mapping from the structure to the molecule vertices
-        :return: None
-        """
-        if structure in self.multiple_vertices and molecule in self.multiple_vertices[structure]:
-            # Creates a list of lists which sets out the vertices that are mapped to each instance of the structure
-            # within the molecule, this ensures that an instance isn't duplicated within the dictionary.
-            multiples = [[vertex[index] for vertex in self.multiple_vertices[structure][molecule].values()]
-                         for index in range(len(self.multiple_vertices[structure][molecule].values()[0]))]
-            for v in multiples:
-                if Counter(mapping.values()) == Counter(v):
-                    return
-            # Store the molecule vertex which maps to each of the structure vertices
-            for key in mapping:
-                self.multiple_vertices[structure][molecule][key].append(mapping[key])
-        else:
-            if structure in self.multiple_vertices:
-                self.multiple_vertices[structure][molecule] = {}
-            elif structure not in self.multiple_vertices:
-                self.multiple_vertices[structure] = {molecule: {}}
-            # When the structure is encountered for the second time in the molecule the mapping from path_structures
-            # is also stored into the multiple_structures dictionary so it includes all instances of the structure
-            for key in mapping:
-                self.multiple_vertices[structure][molecule][key] = [self.path_structures[structure][molecule][key],
-                                                                      mapping[key]]
-
     def _add_structure_to_characteristic(self, structure):
         """
         Adds the given structure to the characteristic substructure in the location where it appears most frequently
@@ -339,6 +307,7 @@ class CharacteristicSubstructure(object):
         :return: None
         """
         if structure in self.multiple_vertices:
+            print 'multiple'
             self._add_multiple_to_characteristic(structure)
         elif structure not in self.multiple_vertices:
             possible_locations = []
@@ -389,6 +358,85 @@ class CharacteristicSubstructure(object):
                 possible_location.adjacency_dictionary[vertex] = neighbours_copy
         return possible_location
 
+    def _add_cs_locations(self, structure):
+        """
+        Remembers the locations where molecules map to the characteristic substructure and the structure which is added.
+
+        :param structure: the graph has been recently added to the characteristic substructure
+        :return: None
+        """
+        self.cs_structures.append(structure)
+        if structure in self.multiple_structures:
+            for molecule in self.multiple_structures[structure]:
+                if molecule not in self.cs_locations:
+                    self.cs_locations[molecule] = {}
+                for vertex in self.multiple_structures[structure][molecule]:
+                    # If this vertex of the structure has been added to the CS
+                    # then add the association to the cs_locations
+                    if vertex in self.characteristic_substructure.adjacency_dictionary.keys():
+                        self.cs_locations[molecule][self.multiple_structures[structure][molecule][vertex]] = vertex
+        else:
+            for molecule in self.path_structures[structure]:
+                if molecule not in self.cs_locations:
+                    self.cs_locations[molecule] = {}
+                for vertex in self.path_structures[structure][molecule]:
+                    # If this vertex of the structure has been added to the CS
+                    # then add the association to the cs_locations
+                    if vertex in self.characteristic_substructure.adjacency_dictionary.keys():
+                        self.cs_locations[molecule][self.path_structures[structure][molecule][vertex]] = vertex
+
+    def _most_frequent_location(self, possible_locations):
+        """
+        Finds the most frequent location of a structure given a list of graphs containing the possible locations.
+
+        If a location is found which is isomorphic to a previously found one, then the frequency of the previous
+        lcoation is increased by one.
+        :param possible_locations: list of graphs which combine the CS and a structure
+        :return: the graph which is chosen as most frequent
+        """
+        isomorphic_locations = {}
+        for possible in possible_locations:
+            for location in isomorphic_locations:
+                if self._nx_isomorphism(possible, location):
+                    isomorphic_locations[location] += 1
+                    break
+            else:
+                isomorphic_locations[possible] = 1
+        return OrderedDict(sorted(isomorphic_locations.items(), key=lambda x: x[1], reverse=True)).keys()[0]
+
+#### Add Multiple Structures to Characteristic Substructure ####
+
+    def _add_structure_to_multiple_dictionary(self, structure, molecule, mapping):
+        """
+        Adds a structure which has appeared more than once in a molecule to the multiple_structures dictionary
+
+        :param structure: the structure which has appeared more than once in a molecule
+        :param molecule: the molecule that has repeated instances of the structure
+        :param mapping: a mapping from the structure to the molecule vertices
+        :return: None
+        """
+        if structure in self.multiple_vertices and molecule in self.multiple_vertices[structure]:
+            # Creates a list of lists which sets out the vertices that are mapped to each instance of the structure
+            # within the molecule, this ensures that a vertex object isn't duplicated within the dictionary.
+            multiples = [[vertex[index] for vertex in self.multiple_vertices[structure][molecule].values()]
+                         for index in range(len(self.multiple_vertices[structure][molecule].values()[0]))]
+            for v in multiples:
+                if Counter(mapping.values()) == Counter(v):
+                    return
+            # Store the molecule vertex which maps to each of the structure vertices
+            for key in mapping:
+                self.multiple_vertices[structure][molecule][key].append(mapping[key])
+        else:
+            if structure in self.multiple_vertices:
+                self.multiple_vertices[structure][molecule] = {}
+            elif structure not in self.multiple_vertices:
+                self.multiple_vertices[structure] = {molecule: {}}
+            # When the structure is encountered for the second time in the molecule the mapping from path_structures
+            # is also stored into the multiple_structures dictionary so it includes all instances of the structure
+            for key in mapping:
+                self.multiple_vertices[structure][molecule][key] = [self.path_structures[structure][molecule][key],
+                                                                    mapping[key]]
+
     def _add_multiple_to_characteristic(self, structure):
         """
         Find locations to add a structure which appears multiple times in the molecules to characteristic substructure.
@@ -423,54 +471,91 @@ class CharacteristicSubstructure(object):
                 multi_structure_tuple = self._create_structure(path, molecule, vertices)
                 multi_structure = multi_structure_tuple[0]
                 multi_vertices = multi_structure_tuple[1]
-                # The structure is added to the path_structures dictionary (using duplicates method)
-                # So that the methods to swap vertices will work correctly
-                unique_multi = self._check_structure_duplicates(multi_structure, molecule, multi_vertices)
-                k_subgraphs[k].append(unique_multi)
+                # unique_multi = self._check_multiple_duplicates(multi_structure, molecule, multi_vertices)
+                self.multiple_structures[multi_structure] = {molecule: multi_vertices}
+                k_subgraphs[k].append(multi_structure)
         # Once there is a non repeated list of multiple structures made from structure try adding them to the CS
             possible_locations = {}
             for multi in k_subgraphs[k]:
                 for molecule in multi_molecules:
                     # Create a possible location which is a combination of the CS and the multi_structure
-                    possible_location = self._add_single_to_characteristic(multi, molecule)
+                    possible_location = self._multiple_cs_location(multi, molecule)
                     possible_locations[possible_location] = multi
             chosen_location = self._most_frequent_location(possible_locations.keys())
             self.characteristic_substructure = chosen_location
             self._add_cs_locations(possible_locations[chosen_location])
 
-    def _add_cs_locations(self, structure):
-        """
-        Remembers the locations where molecules map to the characteristic substructure and the structure which is added.
+    def _check_multiple_duplicates(self, pattern, molecule, vertices):
+        print 'multiple dup'
+        temporary_structure_dict = self.multiple_structures.copy()
+        for structure in self.multiple_structures:
+            nx_mapping = self._nx_isomorphism(pattern, structure)
+            if not nx_mapping:
+                # Continues to next structure for testing as they are not isomorphic
+                continue
+            if nx_mapping:
+                # Maps the vertices from the pattern to the target
+                isomorphic_mapping = {}
+                for target_position in nx_mapping:
+                    for vertex in structure.adjacency_dictionary:
+                        print vertex.position
+                        if vertex.position == target_position:
+                            target_match = vertex
+                            break
+                    for vertex in pattern.adjacency_dictionary:
+                        if vertex.position == nx_mapping[target_position]:
+                            mole_vertex = vertices[vertex]
+                            break
+                    isomorphic_mapping[target_match] = mole_vertex
+                if molecule not in temporary_structure_dict[structure]:
+                    temporary_structure_dict[structure][molecule] = isomorphic_mapping
+                unique_structure = structure
+                break
+        else:
+            temporary_structure_dict[pattern] = {molecule: vertices}
+            unique_structure = pattern
+        self.multiple_structures = temporary_structure_dict.copy()
+        return unique_structure
 
-        :param structure: the graph has been recently added to the characteristic substructure
-        :return: None
-        """
-        self.cs_structures.append(structure)
-        for molecule in self.path_structures[structure]:
-            if molecule not in self.cs_locations:
-                self.cs_locations[molecule] = {}
-            for vertex in self.path_structures[structure][molecule]:
-                # If this vertex of the structure has been added to the CS
-                # then add the association to the cs_locations
-                if vertex in self.characteristic_substructure.adjacency_dictionary.keys():
-                    self.cs_locations[molecule][self.path_structures[structure][molecule][vertex]] = vertex
+    def _multiple_cs_location(self, structure, molecule):
+        possible_location = m.Molecule(str(self.characteristic_substructure))
+        for vertex in self.characteristic_substructure.adjacency_dictionary:
+            possible_location.vertex_to_graph(vertex)
+            for neighbour in self.characteristic_substructure.adjacency_dictionary[vertex]:
+                possible_location.adjacency_dictionary[vertex][neighbour] = copy(self.characteristic_substructure.
+                                                                                 adjacency_dictionary
+                                                                                 [vertex][neighbour])
+        # This tests if the this molecule has any subgraphs isomorphic to the current characteristic substructure
+        # If there are no isomorphic subgraphs then the possible CS will be disconnected
+        if molecule not in self.cs_locations:
+            for vertex in structure.adjacency_dictionary:
+                possible_location.vertex_to_graph(vertex)
+                possible_location.adjacency_dictionary[vertex] = copy(structure.adjacency_dictionary[vertex])
+            return possible_location
+        # If the molecule does contain a subgraph which is isomorphic to the current CS
+        # then check if this subgraph shares any vertices or edges with the structure
+        print 'loop of death?'
+        for vertex in structure.adjacency_dictionary:
+            neighbours_copy = copy(structure.adjacency_dictionary[vertex])
+            for neighbour in structure.adjacency_dictionary[vertex]:
+                print self.multiple_structures[structure][molecule]
+                if neighbour in self.multiple_structures[structure][molecule]:
+                    print self.multiple_structures[structure].keys()
+                    print self.multiple_structures[structure][molecule][neighbour]
+                    print self.cs_locations[molecule]
+                    if self.multiple_structures[structure][molecule][neighbour] in self.cs_locations[molecule]:
+                        cs_neighbour = self.cs_locations[molecule][self.multiple_structures[structure][molecule][neighbour]]
+                        neighbours_copy[cs_neighbour] = copy(structure.adjacency_dictionary[vertex][neighbour])
+                        del neighbours_copy[neighbour]
+            if self.multiple_structures[structure][molecule][vertex] in self.cs_locations[molecule]:
+                cs_vertex = self.cs_locations[molecule][self.multiple_structures[structure][molecule][vertex]]
+                possible_location.adjacency_dictionary[cs_vertex].update(neighbours_copy)
+            elif self.multiple_structures[structure][molecule][vertex] not in self.cs_locations[molecule]:
+                possible_location.vertex_to_graph(vertex)
+                possible_location.adjacency_dictionary[vertex] = neighbours_copy
+        return possible_location
 
-    def _most_frequent_location(self, possible_locations):
-        """
-        Finds the most frequent location of a structure given a list of graphs displaying possible locations.
-
-        :param possible_locations: list of graphs which combine the CS and a structure
-        :return: the graph which is chosen as most frequent
-        """
-        isomorphic_locations = {}
-        for possible in possible_locations:
-            for location in isomorphic_locations:
-                if self._nx_isomorphism(possible, location):
-                    isomorphic_locations[location] += 1
-                    break
-            else:
-                isomorphic_locations[possible] = 1
-        return OrderedDict(sorted(isomorphic_locations.items(), key=lambda x: x[1], reverse=True)).keys()[0]
+#### End of Multiple Structures ###
 
     def _create_cs_results(self):
         """
@@ -553,47 +638,86 @@ class CharacteristicSubstructure(object):
         writer.close()
 
 
-if __name__ == '__main__':
+def argument_input():
+    """
+    Creates the algorithm object with the correct parameters and calls methods based on the command line arguments.
+
+    The user can specify the smiles input file, whether they want to find characteristic substructure or all the
+    representative structures (0 or 1) or they can specify the frequency threshold for paths and structures in molecules
+    :return: None
+    """
     c_structure = None
     all_structures = None
     if len(sys.argv) == 2:
+
+        # Command: python algorithm.py 0/1
+        if sys.argv[1] == '0':
+            cs = CSAlgorithm()
+            c_structure = cs.find_characteristic_substructure()
+        elif sys.argv[1] == '1':
+            cs = CSAlgorithm()
+            all_structures = cs.find_all_representative_structures()
+
+        # Command: python algorithm.py 0.6
+        elif 0 < float(sys.argv[1]) < 1:
+            cs = CSAlgorithm(threshold=float(sys.argv[1]))
+            c_structure = cs.find_characteristic_substructure()
+            all_structures = cs.find_all_representative_structures()
+
         # Command: python algorithm.py smiles_file
-        cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
-        c_structure = cs.find_characteristic_substructure()
-        all_structures = cs.find_all_representative_structures()
+        else:
+            cs = CSAlgorithm(smiles_file=sys.argv[1])
+            c_structure = cs.find_characteristic_substructure()
+            all_structures = cs.find_all_representative_structures()
+
     elif len(sys.argv) == 3:
+        # Command: python algorithm.py 0/1 0.6
+        # Want to use default input file but wish to choose threshold
+        if sys.argv[1] == '0' and 0 < float(sys.argv[2]) < 1:
+            cs = CSAlgorithm(threshold=float(sys.argv[2]))
+            c_structure = cs.find_characteristic_substructure()
+        elif sys.argv[1] == '1' and 0 < float(sys.argv[2]) < 1:
+            cs = CSAlgorithm(threshold=float(sys.argv[2]))
+            all_structures = cs.find_all_representative_structures()
+
         # Command: python algorithm.py smiles_file 0.6
         # Specify threshold but both characteristic substructure and representative structures are given
-        if 0 < float(sys.argv[2]) < 1:
-            cs = CharacteristicSubstructure(smiles_file=sys.argv[1], threshold=float(sys.argv[2]))
+        elif 0 < float(sys.argv[2]) < 1 and sys.argv[1] != '0' or sys.argv[1] != '1':
+            cs = CSAlgorithm(smiles_file=sys.argv[1], threshold=float(sys.argv[2]))
             c_structure = cs.find_characteristic_substructure()
             all_structures = cs.find_all_representative_structures()
-        # Command: python algorithm.py smiles_file 0
-        # 0 signifies that the user wants to receive the characteristic substructure
+
+        # Command: python algorithm.py smiles_file 0/1
         elif sys.argv[2] == '0':
-            cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
+            cs = CSAlgorithm(smiles_file=sys.argv[1])
             c_structure = cs.find_characteristic_substructure()
-        # Command: python algorithm.py smiles_file 1
-        # 1 signifies that the user wants to receive the representative structures
         elif sys.argv[2] == '1':
-            cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
+            cs = CSAlgorithm(smiles_file=sys.argv[1])
             all_structures = cs.find_all_representative_structures()
+
     elif len(sys.argv) == 4:
         # Command: python algorithm.py smiles_file 0/1 0.6
         # O for characteristic substructure, 1 for representative structures
-        cs = CharacteristicSubstructure(smiles_file=sys.argv[1], threshold=float(sys.argv[3]))
+        cs = CSAlgorithm(smiles_file=sys.argv[1], threshold=float(sys.argv[3]))
         if sys.argv[2] == '0':
             c_structure = cs.find_characteristic_substructure()
         elif sys.argv[2] == '1':
             all_structures = cs.find_all_representative_structures()
+
     else:
-        cs = CharacteristicSubstructure()
+        # Default smiles file, threshold and both commands are run
+        cs = CSAlgorithm()
         c_structure = cs.find_characteristic_substructure()
         all_structures = cs.find_all_representative_structures()
 
+    # Display the structures in the command line
     if c_structure:
         print 'Characteristic Substructure'
         print c_structure.adjacency_dictionary.keys()
+        draw(c_structure)
     if all_structures:
         print 'Representative Structures'
         print all_structures
+
+if __name__ == '__main__':
+    argument_input()
