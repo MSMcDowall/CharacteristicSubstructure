@@ -1,17 +1,16 @@
-import molecule
 import smiles_parser
 import networkx as nx
 import matplotlib.pyplot as plt
 
 
-def draw_molecule(mole):
+def draw_molecule(molecule):
     # Create a new NetworkX graph
     g = nx.Graph()
 
     # For each vertex and edge in molecule graph add node and edge in NetworkX graph
-    for n in mole.vertices():
+    for n in molecule.vertices():
         g.add_node(n.position, element=n.element)
-    for e in mole.edges():
+    for e in molecule.edges():
         if e.single:
             g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='single')
         elif e.double:
@@ -37,8 +36,6 @@ def draw_molecule(mole):
     return g
 
 if __name__ == '__main__':
-    mole = smiles_parser.Parser().parse_smiles('ClBrCB')
-    print mole.vertices
-    graph = draw_molecule(mole)
-
-
+    m = smiles_parser.Parser().parse_smiles('ClBrCB')
+    print m.vertices
+    graph = draw_molecule(m)

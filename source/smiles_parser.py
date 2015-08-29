@@ -196,7 +196,6 @@ class Parser(object):
         elif number in self._break_points:                    # The number has been encountered before (close ring)
             ring_atom = self._break_points[number][0]
             ring_bond = self._break_points[number][1]
-            print self._previous_atom
             if ring_bond is None and self._previous_bond is None:    # No bond symbol has been specified
                 if ring_atom.aromatic:
                     self._add_bond_to_aromatic_atom(ring_atom, molecule)

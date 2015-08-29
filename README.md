@@ -23,17 +23,17 @@ Created by Mary McDowall as part of MSc IT degree.
     The results file names will consist of the input file (without the extension) and their results type.
     Example: SMILES_CharacteristicSubstructure.txt or SMILES_RepresentativeStructures.txt 
 
-###To find both the characteristic substructure and the representative substructures:
+###To find both the characteristic substructure and the representative substructures ([] optional):
 
     python source/algorithm.py [SMILES file name] [Frequency threshold in [0,1], default:0.8]
     
-###To find just the characteristic substructure (must specify SMILES file name):
+###To find just the characteristic substructure ([] optional):
 
-    python source/algorithm.py SMILES_file_name 0 [Frequency threshold in [0,1], default:0.8]
+    python source/algorithm.py [SMILES_file_name] 0 [Frequency threshold in [0,1], default:0.8]
     
-###To find just the representative substructures (must specify SMILES file name):
+###To find just the representative substructures ([] optional):
 
-    python source/algorithm.py SMILES_file_name 1 [Frequency threshold in [0,1], default:0.8]
+    python source/algorithm.py [SMILES_file_name] 1 [Frequency threshold in [0,1], default:0.8]
     
 ##Dependencies
 
