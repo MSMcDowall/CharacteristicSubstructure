@@ -6,12 +6,13 @@ from copy import copy
 import sys
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
-# from draw_molecule import draw_molecule as draw
+from draw_molecule import draw_molecule as draw
 
 # Implementation of Finding Characteristic Substructures for Metabolite Classes
 # Ludwig, Hufsky, Elshamy, Böcker
 
-class CharacteristicSubstructure(object):
+
+class CSAlgorithm(object):
     def __init__(self, smiles_file="SMILES.txt", length_start=20, length_end=5, threshold=0.8):
         # The file containing the SMILES strings
         self.smiles_file = smiles_file
@@ -57,18 +58,22 @@ class CharacteristicSubstructure(object):
         paths = self._find_graphs_paths(smiles_set)
         length = self.length_start
         while length >= self.length_end:
+            print length
             representative_paths = self._find_representative_paths(paths, length)
+            print representative_paths
             sorted_dictionary = self._find_representative_structures(representative_paths)
+            print sorted_dictionary
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_dictionary:
                 for structure in sorted_dictionary.keys():
+                    print 'adding...'
                     self._add_structure_to_characteristic(structure)
                 length -= self.step
             else:
                 length -= 1
-        # TODO include smiles_file name in results filename
-        self._data_output(self._create_cs_results(), self.smiles_file[:-4] + '_CharacteristicSubstructure.txt')
+        self._data_output(self._create_cs_results(), self.smiles_file[:-4] + str(self.threshold) +
+                          '_CharacteristicSubstructure.txt')
         return self.characteristic_substructure
 
     def find_all_representative_structures(self):
@@ -92,7 +97,7 @@ class CharacteristicSubstructure(object):
             length -= 1
         representative_structures = OrderedDict(sorted(all_structures.items(), key=lambda x: x[1], reverse=True)).keys()
         self._data_output(self._structures_output(representative_structures),
-                          self.smiles_file[:-4] + '_RepresentativeStructures.txt')
+                          self.smiles_file[:-4] + str(self.threshold) + '_RepresentativeStructures.txt')
         return representative_structures
 
     def _find_graphs_paths(self, smiles_set):
@@ -217,6 +222,9 @@ class CharacteristicSubstructure(object):
                 # Continues to next structure for testing as they are not isomorphic
                 continue
             if nx_mapping:
+                # A multiple structure has been made which matches a structure that has already been added to the CS
+                if structure in self.cs_structures:
+                    return False
                 # Maps the vertices from the pattern to the target
                 isomorphic_mapping = {}
                 for target_position in nx_mapping:
@@ -244,7 +252,6 @@ class CharacteristicSubstructure(object):
         self.path_structures = temporary_structure_dict.copy()
         return unique_structure
 
-    # TODO Create error calling without making structure
     def _nx_isomorphism(self, pattern, target):
         """
         Uses the NetworkX isomorphism algorithm to check if the pattern graph and the target graph are isomorphic.
@@ -256,10 +263,8 @@ class CharacteristicSubstructure(object):
         :return: a dictionary which maps the indices of the two NetworkX graphs together if they are isomorphic
         """
         if pattern not in self.structure_nx:
-            #self._update_position(pattern)
             self._create_nx_graph(pattern)
         if target not in self.structure_nx:
-            #self._update_position(target)
             self._create_nx_graph(target)
         if not nx.faster_could_be_isomorphic(self.structure_nx[pattern], self.structure_nx[target]):
             # Graphs are definitely not isomorphic
@@ -377,10 +382,11 @@ class CharacteristicSubstructure(object):
         for vertex in structure.adjacency_dictionary:
             neighbours_copy = copy(structure.adjacency_dictionary[vertex])
             for neighbour in structure.adjacency_dictionary[vertex]:
-                if self.path_structures[structure][molecule][neighbour] in self.cs_locations[molecule]:
-                    cs_neighbour = self.cs_locations[molecule][self.path_structures[structure][molecule][neighbour]]
-                    neighbours_copy[cs_neighbour] = copy(structure.adjacency_dictionary[vertex][neighbour])
-                    del neighbours_copy[neighbour]
+                if neighbour in self.path_structures[structure][molecule]:
+                    if self.path_structures[structure][molecule][neighbour] in self.cs_locations[molecule]:
+                        cs_neighbour = self.cs_locations[molecule][self.path_structures[structure][molecule][neighbour]]
+                        neighbours_copy[cs_neighbour] = copy(structure.adjacency_dictionary[vertex][neighbour])
+                        del neighbours_copy[neighbour]
             if self.path_structures[structure][molecule][vertex] in self.cs_locations[molecule]:
                 cs_vertex = self.cs_locations[molecule][self.path_structures[structure][molecule][vertex]]
                 possible_location.adjacency_dictionary[cs_vertex].update(neighbours_copy)
@@ -423,20 +429,20 @@ class CharacteristicSubstructure(object):
                 multi_structure_tuple = self._create_structure(path, molecule, vertices)
                 multi_structure = multi_structure_tuple[0]
                 multi_vertices = multi_structure_tuple[1]
-                # The structure is added to the path_structures dictionary (using duplicates method)
-                # So that the methods to swap vertices will work correctly
                 unique_multi = self._check_structure_duplicates(multi_structure, molecule, multi_vertices)
-                k_subgraphs[k].append(unique_multi)
+                if unique_multi:
+                    k_subgraphs[k].append(unique_multi)
         # Once there is a non repeated list of multiple structures made from structure try adding them to the CS
             possible_locations = {}
             for multi in k_subgraphs[k]:
-                for molecule in multi_molecules:
+                for molecule in self.path_structures[multi]:
                     # Create a possible location which is a combination of the CS and the multi_structure
                     possible_location = self._add_single_to_characteristic(multi, molecule)
                     possible_locations[possible_location] = multi
-            chosen_location = self._most_frequent_location(possible_locations.keys())
-            self.characteristic_substructure = chosen_location
-            self._add_cs_locations(possible_locations[chosen_location])
+            if possible_locations:
+                chosen_location = self._most_frequent_location(possible_locations.keys())
+                self.characteristic_substructure = chosen_location
+                self._add_cs_locations(possible_locations[chosen_location])
 
     def _add_cs_locations(self, structure):
         """
@@ -501,7 +507,7 @@ class CharacteristicSubstructure(object):
             string_list.append(self._adjacency_dictionary_output(structure) + '\n')
             counter += 1
         for molecule in self.molecules:
-            string_list.append(str(molecule) + ':       ')
+            string_list.append(str(molecule) + ': ')
             membership = []
             for structure in structures:
                 if molecule in self.path_structures[structure]:
@@ -553,47 +559,85 @@ class CharacteristicSubstructure(object):
         writer.close()
 
 
-if __name__ == '__main__':
+def argument_input():
+    """
+    Creates the algorithm object with the correct parameters and calls methods based on the command line arguments.
+
+    The user can specify the smiles input file, whether they want to find characteristic substructure or all the
+    representative structures (0 or 1) or they can specify the frequency threshold for paths and structures in molecules
+    :return: None
+    """
     c_structure = None
     all_structures = None
     if len(sys.argv) == 2:
+
+        # Command: python algorithm.py 0/1
+        if sys.argv[1] == 'C':
+            cs = CSAlgorithm()
+            c_structure = cs.find_characteristic_substructure()
+        elif sys.argv[1] == 'R':
+            cs = CSAlgorithm()
+            all_structures = cs.find_all_representative_structures()
+
+        # # Command: python algorithm.py 0.6
+        # elif 0 < float(sys.argv[1]) < 1:
+        #     cs = CSAlgorithm(threshold=float(sys.argv[1]))
+        #     c_structure = cs.find_characteristic_substructure()
+        #     all_structures = cs.find_all_representative_structures()
+
         # Command: python algorithm.py smiles_file
-        cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
-        c_structure = cs.find_characteristic_substructure()
-        all_structures = cs.find_all_representative_structures()
+        else:
+            cs = CSAlgorithm(smiles_file=sys.argv[1])
+            c_structure = cs.find_characteristic_substructure()
+            all_structures = cs.find_all_representative_structures()
+
     elif len(sys.argv) == 3:
-        # Command: python algorithm.py smiles_file 0.6
-        # Specify threshold but both characteristic substructure and representative structures are given
-        if 0 < float(sys.argv[2]) < 1:
-            cs = CharacteristicSubstructure(smiles_file=sys.argv[1], threshold=float(sys.argv[2]))
+        # # Command: python algorithm.py 0/1 0.6
+        # # Want to use default input file but wish to choose threshold
+        # if sys.argv[1] == 'C' and 0 < float(sys.argv[2]) < 1:
+        #     cs = CSAlgorithm(threshold=float(sys.argv[2]))
+        #     c_structure = cs.find_characteristic_substructure()
+        # elif sys.argv[1] == 'R' and 0 < float(sys.argv[2]) < 1:
+        #     cs = CSAlgorithm(threshold=float(sys.argv[2]))
+        #     all_structures = cs.find_all_representative_structures()
+        #
+        # # Command: python algorithm.py smiles_file 0.6
+        # # Specify threshold but both characteristic substructure and representative structures are given
+        # elif sys.argv[1] != 'C' or sys.argv[1] != 'R' and 0 < float(sys.argv[2]) < 1:
+        #     cs = CSAlgorithm(smiles_file=sys.argv[1], threshold=float(sys.argv[2]))
+        #     c_structure = cs.find_characteristic_substructure()
+        #     all_structures = cs.find_all_representative_structures()
+
+        # Command: python algorithm.py smiles_file 0/1
+        if sys.argv[2] == 'C':
+            cs = CSAlgorithm(smiles_file=sys.argv[1])
             c_structure = cs.find_characteristic_substructure()
+        elif sys.argv[2] == 'R':
+            cs = CSAlgorithm(smiles_file=sys.argv[1])
             all_structures = cs.find_all_representative_structures()
-        # Command: python algorithm.py smiles_file 0
-        # 0 signifies that the user wants to receive the characteristic substructure
-        elif sys.argv[2] == '0':
-            cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
-            c_structure = cs.find_characteristic_substructure()
-        # Command: python algorithm.py smiles_file 1
-        # 1 signifies that the user wants to receive the representative structures
-        elif sys.argv[2] == '1':
-            cs = CharacteristicSubstructure(smiles_file=sys.argv[1])
-            all_structures = cs.find_all_representative_structures()
+
     elif len(sys.argv) == 4:
         # Command: python algorithm.py smiles_file 0/1 0.6
         # O for characteristic substructure, 1 for representative structures
-        cs = CharacteristicSubstructure(smiles_file=sys.argv[1], threshold=float(sys.argv[3]))
-        if sys.argv[2] == '0':
+        cs = CSAlgorithm(smiles_file=sys.argv[1], threshold=float(sys.argv[3]))
+        if sys.argv[2] == 'C':
             c_structure = cs.find_characteristic_substructure()
-        elif sys.argv[2] == '1':
+        elif sys.argv[2] == 'R':
             all_structures = cs.find_all_representative_structures()
+
     else:
-        cs = CharacteristicSubstructure()
+        # Default smiles file, threshold and both commands are run
+        cs = CSAlgorithm()
         c_structure = cs.find_characteristic_substructure()
         all_structures = cs.find_all_representative_structures()
 
+    # Display the structures in the command line
     if c_structure:
         print 'Characteristic Substructure'
         print c_structure.adjacency_dictionary.keys()
     if all_structures:
         print 'Representative Structures'
         print all_structures
+
+if __name__ == '__main__':
+    argument_input()

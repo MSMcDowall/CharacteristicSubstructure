@@ -46,6 +46,18 @@ class Bond(graph.Edge):
         elif self.aromatic:
             return 'aromatic bond'
 
+    def __repr__(self):
+        if self.single:
+            return '<Single Bond at %s>' % id(self)
+        elif self.double:
+            return '<Double Bond at %s>' % id(self)
+        elif self.triple:
+            return '<Triple Bond at %s>' % id(self)
+        elif self.quadruple:
+            return '<Quadruple Bond at %s>' % id(self)
+        elif self.aromatic:
+            return '<Aromatic Bond at %s>' % id(self)
+
 
 class Molecule(graph.Graph):
     def __init__(self, smiles):
