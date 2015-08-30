@@ -401,18 +401,15 @@ class CSAlgorithm(object):
         :param structure: The structure which appears multiple times in the molecules and is to be added to CS
         :return: a list of graphs displaying the possible locations that the structure could have in the CS
         """
-        print 'multiple'
-        if len(self.multiple_vertices[structure]) < len(self.molecules) * self.isomorphism_factor:
+        if len(self.multiple_vertices[structure]) < (len(self.molecules) * self.isomorphism_factor):
             return []
-        # accepted_locations = []
         repeats = set()
         for molecule in self.multiple_vertices[structure]:
             # Finds the number of different molecules associated  with one of the structure vertices
             # This indicates the number of instances of the structure that can be found in the molecule
             repeats.add(len(self.multiple_vertices[structure][molecule][structure.vertices()[0]]))
         repetitions = sorted(repeats, key=float)
-        print repetitions
-        k_subgraphs = []
+        k_subgraphs = [structure]
         for k in repetitions:
             # A list of the molecules that contain exactly k incidences of the subgraph
             multi_molecules = [m for m in self.multiple_vertices[structure]
