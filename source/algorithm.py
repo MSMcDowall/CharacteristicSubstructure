@@ -6,7 +6,6 @@ from copy import copy
 import sys
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
-from draw_molecule import draw_molecule as draw
 
 # Implementation of Finding Characteristic Substructures for Metabolite Classes
 # Ludwig, Hufsky, Elshamy, Böcker
@@ -308,7 +307,7 @@ class CSAlgorithm(object):
 
         :param structure: the structure which has appeared more than once in a molecule
         :param molecule: the molecule that has repeated instances of the structure
-        :param mapping: a mapping from the structure to the molecule vertices
+        :param mapping: a mapping from the structure to the molecule vertices which comes from the isomorphism check
         :return: None
         """
         if structure in self.multiple_vertices and molecule in self.multiple_vertices[structure]:
@@ -402,6 +401,7 @@ class CSAlgorithm(object):
         :param structure: The structure which appears multiple times in the molecules and is to be added to CS
         :return: a list of graphs displaying the possible locations that the structure could have in the CS
         """
+        print 'multiple'
         if len(self.multiple_vertices[structure]) < len(self.molecules) * self.isomorphism_factor:
             return []
         # accepted_locations = []
@@ -411,9 +411,9 @@ class CSAlgorithm(object):
             # This indicates the number of instances of the structure that can be found in the molecule
             repeats.add(len(self.multiple_vertices[structure][molecule][structure.vertices()[0]]))
         repetitions = sorted(repeats, key=float)
-        k_subgraphs = {}
+        print repetitions
+        k_subgraphs = []
         for k in repetitions:
-            k_subgraphs[k] = []
             # A list of the molecules that contain exactly k incidences of the subgraph
             multi_molecules = [m for m in self.multiple_vertices[structure]
                                if len(self.multiple_vertices[structure][m].values()[0]) == k]
@@ -431,18 +431,18 @@ class CSAlgorithm(object):
                 multi_vertices = multi_structure_tuple[1]
                 unique_multi = self._check_structure_duplicates(multi_structure, molecule, multi_vertices)
                 if unique_multi:
-                    k_subgraphs[k].append(unique_multi)
+                    k_subgraphs.append(unique_multi)
         # Once there is a non repeated list of multiple structures made from structure try adding them to the CS
-            possible_locations = {}
-            for multi in k_subgraphs[k]:
-                for molecule in self.path_structures[multi]:
-                    # Create a possible location which is a combination of the CS and the multi_structure
-                    possible_location = self._add_single_to_characteristic(multi, molecule)
-                    possible_locations[possible_location] = multi
-            if possible_locations:
-                chosen_location = self._most_frequent_location(possible_locations.keys())
-                self.characteristic_substructure = chosen_location
-                self._add_cs_locations(possible_locations[chosen_location])
+        possible_locations = {}
+        for multi in k_subgraphs:
+            for molecule in self.path_structures[multi]:
+                # Create a possible location which is a combination of the CS and the multi_structure
+                possible_location = self._add_single_to_characteristic(multi, molecule)
+                possible_locations[possible_location] = multi
+        if possible_locations:
+            chosen_location = self._most_frequent_location(possible_locations.keys())
+            self.characteristic_substructure = chosen_location
+            self._add_cs_locations(possible_locations[chosen_location])
 
     def _add_cs_locations(self, structure):
         """
@@ -589,6 +589,7 @@ def argument_input():
         else:
             cs = CSAlgorithm(smiles_file=sys.argv[1])
             c_structure = cs.find_characteristic_substructure()
+            cs = CSAlgorithm(smiles_file=sys.argv[1])
             all_structures = cs.find_all_representative_structures()
 
     elif len(sys.argv) == 3:
@@ -629,6 +630,7 @@ def argument_input():
         # Default smiles file, threshold and both commands are run
         cs = CSAlgorithm()
         c_structure = cs.find_characteristic_substructure()
+        cs = CSAlgorithm()
         all_structures = cs.find_all_representative_structures()
 
     # Display the structures in the command line

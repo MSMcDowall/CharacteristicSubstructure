@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 def draw_molecule(molecule):
     # Create a new NetworkX graph
     g = nx.Graph()
-
     # For each vertex and edge in molecule graph add node and edge in NetworkX graph
     for n in molecule.vertices():
         g.add_node(n.position, element=n.element)
@@ -23,7 +22,7 @@ def draw_molecule(molecule):
             g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='aromatic')
 
     # Set the layout
-    pos = nx.spring_layout(g, iterations=20)
+    pos = nx.spring_layout(g, iterations=30)
     # Display the element type and edge type as labels
     labels = dict((n,d['element']) for n,d in g.nodes(data=True))
     edge_labels = dict(((u,v),d['type']) for u,v,d in g.edges(data=True))
