@@ -21,7 +21,6 @@ class Vertex(object):
     """
     def __init__(self, element):
         self.element = element
-        self.position = 0
         self.visited = False
 
     def __hash__(self):
@@ -48,13 +47,6 @@ class Edge(object):
         :return: a tuple of the two endpoints
         """
         return self._origin, self._destination
-
-    def endpoints_position(self):
-        """
-        Gives the positions of the endpoints of the edge
-        :return: a tuple of the positions of the endpoints
-        """
-        return self._origin.position, self._destination.position
 
     def opposite(self, vertex):
         """
@@ -88,6 +80,8 @@ class Graph(object):
         self.adjacency_dictionary = {}
         self.size = 0
         self.paths = []
+        # list of vertices, index in list acts as position indicator for isomorphism checking
+        self.positions = []
 
     def vertices(self):
         """
@@ -120,6 +114,7 @@ class Graph(object):
         self.adjacency_dictionary = {}
         self.size = 0
         self.paths = []
+        self.positions = []
 
     def add_vertex(self, element):
         """
@@ -143,9 +138,10 @@ class Graph(object):
         :return: None
         """
         self.adjacency_dictionary[vertex] = {}
-        vertex.position = self.size
+        self.positions.append(vertex)
         self.size += 1
 
+    # TODO try for key error
     def remove_vertex(self, vertex):
         """
         Delete the vertex object from the graph by removing it from the dictionaries of vertices which are adjacent.
@@ -157,6 +153,7 @@ class Graph(object):
         for neighbour in self.neighbours(vertex):
             del self.adjacency_dictionary[neighbour][vertex]
         del self.adjacency_dictionary[vertex]
+        self.positions.remove(vertex)
 
     def add_edge(self, first_vertex, second_vertex, element=None):
         """
@@ -225,6 +222,35 @@ class Graph(object):
         """
         return len(self.adjacency_dictionary[vertex])
 
+    def position_of_vertex(self, vertex):
+        """
+        Returns the position of the given vertex
+
+        :param vertex: the vertex object whose position in the positions list is to be returned
+        :return: an integer which is the position of the vertex in the graph
+        """
+        return self.positions.index(vertex)
+
+    def vertex_from_position(self, position):
+        """
+        Tests if there is a vertex at that position and return it if there is
+
+        :param position: an integer which is to be tested
+        :return: a vertex if it had has the given position
+        """
+        if len(self.positions) > position:
+            return self.positions[position]
+        else:
+            return False
+
+    def endpoints_position(self, edge):
+        """
+        Gives the positions of the endpoints of the edge
+        :return: a tuple of the positions of the endpoints
+        """
+        endpoints = edge.endpoints
+        return self.position_of_vertex(endpoints[0]), self.position_of_vertex(endpoints[1])
+
     def contains_edge(self, first_vertex, second_vertex):
         """
         Test if there is an edge joining two vertices in the graph
@@ -235,19 +261,6 @@ class Graph(object):
         """
         if second_vertex in self.adjacency_dictionary[first_vertex]:
             return self.adjacency_dictionary[first_vertex][second_vertex]
-        else:
-            return False
-
-    def vertex_position(self, position):
-        """
-        Tests if there is a vertex at that position
-
-        :param position: an integer which is to be tested
-        :return: a vertex if it had has the given position
-        """
-        for vertex in self.vertices():
-            if vertex.position == position:
-                return vertex
         else:
             return False
 
@@ -266,33 +279,33 @@ class Graph(object):
                 for w in self.vertices():
                     w.visited = False       # Start search anew for each root
                 path_stack = []             # Used to create the string of the path
-                position_stack = []         # Used to create the string of positions
-                self._path_visit(v, path_stack, position_stack, all_paths)
+                vertex_stack = []         # Used to create the list of vertices
+                self._path_visit(v, path_stack, vertex_stack, all_paths)
                 completed.append(v)
         return all_paths
 
-    def _path_visit(self, v, path_stack, position_stack, all_paths):
+    def _path_visit(self, v, path_stack, vertex_stack, all_paths):
         """
         The recursive element of the find_all_paths method.
         As each new path is found the string representing it is created using the path_stack.
         The vertices which are present in the path are stored along with the path as a tuple in self.paths
         :param v: the vertex object which is to be added to the path
         :param path_stack: The stack which is used to construct the path string
-        :param position_stack: The stack which is used to store the vertices encountered in order
+        :param vertex_stack: The stack which is used to store the vertices encountered in order
         :param all_paths: A dictionary which is used to store a non-duplicated list of paths along with their lengths
         :return: None
         """
         v.visited = True
         path_stack.append(v.element + '-')
-        position_stack.append(v)
+        vertex_stack.append(v)
         for w in self.adjacency_dictionary[v]:
             if not w.visited:
-                self._path_visit(w, path_stack, position_stack, all_paths)
+                self._path_visit(w, path_stack, vertex_stack, all_paths)
         letters = ''.join(path_stack)
         path = letters[:-1]    # Remove final dash to make string more readable
-        positions = list(position_stack)
+        positions = list(vertex_stack)
         all_paths[path] = len(letters)/2
         self.paths.append((path, positions))
         # Once the vertex has been processed it is popped from the stack to create the string and to store the vertices
         path_stack.pop()
-        position_stack.pop()
+        vertex_stack.pop()
