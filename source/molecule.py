@@ -14,9 +14,9 @@ class Atom(graph.Vertex):
     
     def __str__(self):
         if self.aromatic:
-            return 'aromatic %s atom at position %s' % (self.element, self.position)
+            return 'aromatic %s atom' % self.element
         else:
-            return '%s atom at position %s' % (self.element, self.position)
+            return '%s atom' % self.element
 
     def __repr__(self):
         if self.aromatic:

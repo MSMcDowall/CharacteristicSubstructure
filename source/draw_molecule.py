@@ -8,18 +8,18 @@ def draw_molecule(molecule):
     g = nx.Graph()
     # For each vertex and edge in molecule graph add node and edge in NetworkX graph
     for n in molecule.vertices():
-        g.add_node(n.position, element=n.element)
+        g.add_node(molecule.position_of_vertex(n), element=n.element)
     for e in molecule.edges():
         if e.single:
-            g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='single')
+            g.add_edge(molecule.endpoints_position(e)[0], molecule.endpoints_position(e)[1], type='single')
         elif e.double:
-            g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='double')
+            g.add_edge(molecule.endpoints_position(e)[0], molecule.endpoints_position(e)[1], type='double')
         elif e.triple:
-            g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='triple')
+            g.add_edge(molecule.endpoints_position(e)[0], molecule.endpoints_position(e)[1], type='triple')
         elif e.quadruple:
-            g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='quadruple')
+            g.add_edge(molecule.endpoints_position(e)[0], molecule.endpoints_position(e)[1], type='quadruple')
         elif e.aromatic:
-            g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='aromatic')
+            g.add_edge(molecule.endpoints_position(e)[0], molecule.endpoints_position(e)[1], type='aromatic')
 
     # Set the layout
     pos = nx.spring_layout(g, iterations=30)

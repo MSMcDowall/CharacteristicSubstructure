@@ -228,14 +228,19 @@ class CSAlgorithm(object):
                 # Maps the vertices from the pattern to the target
                 isomorphic_mapping = {}
                 for target_position in nx_mapping:
-                    for vertex in structure.adjacency_dictionary:
-                        if vertex.position == target_position:
-                            target_match = vertex
-                            break
-                    for vertex in pattern.adjacency_dictionary:
-                        if vertex.position == nx_mapping[target_position]:
-                            mole_vertex = vertices[vertex]
-                            break
+                    if structure.vertex_from_position(target_position):
+                        target_match = structure.vertex_from_position(target_position)
+                    if pattern.vertex_from_position(nx_mapping[target_position]):
+                        pattern_match = pattern.vertex_from_position(nx_mapping[target_position])
+                    mole_vertex = vertices[pattern_match]
+                    # for vertex in structure.adjacency_dictionary:
+                    #     if vertex.position_of_vertex == target_position:
+                    #         target_match = vertex
+                    #         break
+                    # for vertex in pattern.adjacency_dictionary:
+                    #     if vertex.position_of_vertex == nx_mapping[target_position]:
+                    #         mole_vertex = vertices[vertex]
+                    #         break
                     isomorphic_mapping[target_match] = mole_vertex
                 if molecule in temporary_structure_dict[structure]:
                     # If the molecule vertices are different to the vertices currently in dictionary
@@ -276,31 +281,31 @@ class CSAlgorithm(object):
         if matcher.is_isomorphic():
             return matcher.mapping
 
-    def _create_nx_graph(self, path_structure):
+    def _create_nx_graph(self, structure):
         """
         Creates a copy of the molecule object as an NetworkX graph
         The position attirbute of each structure vertices is used as the index of the NetworkX graph
 
-        :param path_structure: the molecule object which will be turned into a NetworkX graph
+        :param structure: the molecule object which will be turned into a NetworkX graph
         :return: None
         """
         g = nx.Graph()
         # For each vertex and edge in molecule graph add node and edge in NetworkX graph
-        for n in path_structure.vertices():
-            g.add_node(n.position, element=n.element)
-        for e in path_structure.edges():
+        for n in structure.vertices():
+            g.add_node(structure.position_of_vertex(n), element=n.element)
+        for e in structure.edges():
             if isinstance(e, m.Bond):
                 if e.single:
-                    g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='single')
+                    g.add_edge(structure.endpoints_position(e)[0], structure.endpoints_position(e)[1], type='single')
                 elif e.double:
-                    g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='double')
+                    g.add_edge(structure.endpoints_position(e)[0], structure.endpoints_position(e)[1], type='double')
                 elif e.triple:
-                    g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='triple')
+                    g.add_edge(structure.endpoints_position(e)[0], structure.endpoints_position(e)[1], type='triple')
                 elif e.quadruple:
-                    g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='quadruple')
+                    g.add_edge(structure.endpoints_position(e)[0], structure.endpoints_position(e)[1], type='quadruple')
                 elif e.aromatic:
-                    g.add_edge(e.endpoints_position()[0], e.endpoints_position()[1], type='aromatic')
-        self.structure_nx[path_structure] = g
+                    g.add_edge(structure.endpoints_position(e)[0], structure.endpoints_position(e)[1], type='aromatic')
+        self.structure_nx[structure] = g
 
     def _add_structure_to_multiple_dictionary(self, structure, molecule, mapping):
         """
