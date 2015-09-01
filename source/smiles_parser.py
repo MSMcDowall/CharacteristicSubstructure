@@ -136,7 +136,7 @@ class Parser(object):
         else:
             atom = molecule.add_atom(d['organic'])
             self._add_bond(atom, molecule)
-        # Before moving to the next part of the SMILES.txt string set this atom as the previous atom
+        # Before moving to the next part of the smiles string set this atom as the previous atom
         self._previous_atom = atom
 
     def _add_bond(self, atom, molecule):
