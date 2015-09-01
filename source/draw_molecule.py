@@ -36,5 +36,4 @@ def draw_molecule(molecule):
 
 if __name__ == '__main__':
     m = smiles_parser.Parser().parse_smiles('ClBrCB')
-    print m.vertices
     graph = draw_molecule(m)

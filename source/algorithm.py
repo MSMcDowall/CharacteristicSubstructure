@@ -401,6 +401,7 @@ class CSAlgorithm(object):
         :param structure: The structure which appears multiple times in the molecules and is to be added to CS
         :return: a list of graphs displaying the possible locations that the structure could have in the CS
         """
+        print 'multiple'
         if len(self.multiple_vertices[structure]) < (len(self.molecules) * self.isomorphism_factor):
             return []
         repeats = set()
@@ -590,21 +591,21 @@ def argument_input():
             all_structures = cs.find_all_representative_structures()
 
     elif len(sys.argv) == 3:
-        # # Command: python algorithm.py 0/1 0.6
-        # # Want to use default input file but wish to choose threshold
-        # if sys.argv[1] == 'C' and 0 < float(sys.argv[2]) < 1:
-        #     cs = CSAlgorithm(threshold=float(sys.argv[2]))
-        #     c_structure = cs.find_characteristic_substructure()
-        # elif sys.argv[1] == 'R' and 0 < float(sys.argv[2]) < 1:
-        #     cs = CSAlgorithm(threshold=float(sys.argv[2]))
-        #     all_structures = cs.find_all_representative_structures()
-        #
-        # # Command: python algorithm.py smiles_file 0.6
-        # # Specify threshold but both characteristic substructure and representative structures are given
-        # elif sys.argv[1] != 'C' or sys.argv[1] != 'R' and 0 < float(sys.argv[2]) < 1:
-        #     cs = CSAlgorithm(smiles_file=sys.argv[1], threshold=float(sys.argv[2]))
-        #     c_structure = cs.find_characteristic_substructure()
-        #     all_structures = cs.find_all_representative_structures()
+        # Command: python algorithm.py 0/1 0.6
+        # Want to use default input file but wish to choose threshold
+        if sys.argv[1] == 'C' and 0 < float(sys.argv[2]) < 1:
+            cs = CSAlgorithm(threshold=float(sys.argv[2]))
+            c_structure = cs.find_characteristic_substructure()
+        elif sys.argv[1] == 'R' and 0 < float(sys.argv[2]) < 1:
+            cs = CSAlgorithm(threshold=float(sys.argv[2]))
+            all_structures = cs.find_all_representative_structures()
+
+        # Command: python algorithm.py smiles_file 0.6
+        # Specify threshold but both characteristic substructure and representative structures are given
+        elif sys.argv[1] != 'C' or sys.argv[1] != 'R' and 0 < float(sys.argv[2]) < 1:
+            cs = CSAlgorithm(smiles_file=sys.argv[1], threshold=float(sys.argv[2]))
+            c_structure = cs.find_characteristic_substructure()
+            all_structures = cs.find_all_representative_structures()
 
         # Command: python algorithm.py smiles_file 0/1
         if sys.argv[2] == 'C':
