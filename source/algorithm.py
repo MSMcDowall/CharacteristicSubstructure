@@ -12,7 +12,7 @@ import networkx.algorithms.isomorphism as iso
 
 
 class CSAlgorithm(object):
-    def __init__(self, smiles_file="SMILES.txt", length_start=20, length_end=5, threshold=0.8):
+    def __init__(self, smiles_file, length_start=20, length_end=5, threshold=0.8):
         # The file containing the SMILES strings
         self.smiles_file = smiles_file
         # The initial parameters for the algorithm
