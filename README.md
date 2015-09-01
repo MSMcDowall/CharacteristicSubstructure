@@ -17,23 +17,20 @@ Created by Mary McDowall as part of MSc IT degree.
     
 ##Input/Output
 
-    The SMILES data can either be copied into the SMILES.txt file within the directory (the default input file)
-    or an alternative can be specified as a command line argument.
-    
-    The results file names will consist of the input file (without the extension) and their results type.
-    Example: SMILES_CharacteristicSubstructure.txt or SMILES_RepresentativeStructures.txt 
+    The file containing the SMILES strings (either .txt or .smi) is specified in the command line arguments.
 
-###To find both the characteristic substructure and the representative substructures ([] optional):
+    If the user only wants the characteristic substructure then the "-c" flag can be used.
+    If the user only wants the representative substructures then the "-r" flag can be used.
+    If the user wishes to view the command line argument help statements then the "-h" flag can be used.
+    If the user wishes to alter the frequency threshold then enter the new threshold as a decimal after the file name.
+    Example: python source\algorithm.py -c data\folder\FileName.txt 0.6
+          or python source\algorithm.py -r data\folder\FileName.txt
+          or python source\algorithm.py -h
 
-    python source/algorithm.py [SMILES file name] [Frequency threshold in [0,1], default:0.8]
-    
-###To find just the characteristic substructure ([] optional):
-
-    python source/algorithm.py [SMILES_file_name] 0 [Frequency threshold in [0,1], default:0.8]
-    
-###To find just the representative substructures ([] optional):
-
-    python source/algorithm.py [SMILES_file_name] 1 [Frequency threshold in [0,1], default:0.8]
+    The results file names will consist of the input file (without the extension), the relative frequency threshold
+    and their results type and be located in the same directory as the input file.
+    Example: FileName0.6_CharacteristicSubstructure.txt
+          or FileName0.8_RepresentativeStructures.txt
     
 ##Dependencies
 
