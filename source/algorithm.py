@@ -68,6 +68,8 @@ class CSAlgorithm(object):
             if sorted_dictionary:
                 for structure in sorted_dictionary.keys():
                     print 'adding...'
+                    print self.characteristic_substructure.positions
+                    print structure.positions
                     self._add_structure_to_characteristic(structure)
                 length -= self.step
             else:
@@ -398,6 +400,9 @@ class CSAlgorithm(object):
             elif self.path_structures[structure][molecule][vertex] not in self.cs_locations[molecule]:
                 possible_location.vertex_to_graph(vertex)
                 possible_location.adjacency_dictionary[vertex] = neighbours_copy
+        print possible_location.vertices()
+        for e in possible_location.edges():
+            print e.endpoints
         return possible_location
 
     def _add_multiple_to_characteristic(self, structure):
@@ -472,8 +477,11 @@ class CSAlgorithm(object):
         :param possible_locations: list of graphs which combine the CS and a structure
         :return: the graph which is chosen as most frequent
         """
+        print 'into frequent'
         isomorphic_locations = {}
         for possible in possible_locations:
+            print possible.positions
+            print possible.adjacency_dictionary.keys()
             for location in isomorphic_locations:
                 if self._nx_isomorphism(possible, location):
                     isomorphic_locations[location] += 1
