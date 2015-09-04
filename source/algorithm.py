@@ -62,16 +62,11 @@ class CSAlgorithm(object):
         while length >= self.length_end:
             print length
             representative_paths = self._find_representative_paths(paths, length)
-            print representative_paths
             sorted_dictionary = self._find_representative_structures(representative_paths)
-            print sorted_dictionary
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             if sorted_dictionary:
                 for structure in sorted_dictionary.keys():
-                    print 'adding...'
-                    print self.characteristic_substructure.positions
-                    print structure.positions
                     self._add_structure_to_characteristic(structure)
                 length -= self.step
             else:
@@ -227,8 +222,8 @@ class CSAlgorithm(object):
                 continue
             if nx_mapping:
                 # A multiple structure has been made which matches a structure that has already been added to the CS
-                if structure in self.cs_structures:
-                    return False
+                # if structure in self.cs_structures:
+                #     return False
                 # Maps the vertices from the pattern to the target
                 isomorphic_mapping = {}
                 for target_position in nx_mapping:
@@ -345,7 +340,6 @@ class CSAlgorithm(object):
         :param structure: the molecule object which is to be added to the characteristic substructure
         :return: None
         """
-        print 'decision'
         if structure in self.multiple_vertices:
             self._add_multiple_to_characteristic(structure)
         elif structure not in self.multiple_vertices:
@@ -513,7 +507,6 @@ class CSAlgorithm(object):
         :param possible_locations: list of graphs which combine the CS and a structure
         :return: the graph which is chosen as most frequent
         """
-        print 'into frequent'
         isomorphic_locations = {}
         for possible in possible_locations:
             for location in isomorphic_locations:
