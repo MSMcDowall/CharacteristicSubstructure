@@ -17,7 +17,7 @@ Created by Mary McDowall as part of MSc IT degree.
     appear in a lower number of molecules will be included in the characteristic substructure or in the list of 
     representative structures.
     
-##Input/Output
+##Input
 
     The file containing the SMILES strings (either .txt or .smi) is specified in the command line arguments.
 
@@ -28,6 +28,8 @@ Created by Mary McDowall as part of MSc IT degree.
     Example: python source\algorithm.py -c data\folder\FileName.txt 0.6
           or python source\algorithm.py -r data\folder\FileName.txt
           or python source\algorithm.py -h
+
+##Output
 
     The results file names will consist of the input file (without the extension), the relative frequency threshold
     and their results type and be located in the same directory as the input file.

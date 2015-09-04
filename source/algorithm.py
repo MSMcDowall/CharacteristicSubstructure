@@ -8,6 +8,7 @@ import argparse
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
 
+
 # Implementation of Finding Characteristic Substructures for Metabolite Classes
 # Ludwig, Hufsky, Elshamy, Böcker
 
@@ -28,6 +29,7 @@ class CSAlgorithm(object):
         # List holding structures which have been added to the characteristic substructure
         self.cs_structures = []
         # Dictionary holding the locations of the molecules which map to the characteristic substructure
+        # {molecule: {molecule vertex: cs vertex}}
         self.cs_locations = {}
         # All the given molecules
         self.molecules = []
@@ -235,19 +237,12 @@ class CSAlgorithm(object):
                     if pattern.vertex_from_position(nx_mapping[target_position]):
                         pattern_match = pattern.vertex_from_position(nx_mapping[target_position])
                     mole_vertex = vertices[pattern_match]
-                    # for vertex in structure.adjacency_dictionary:
-                    #     if vertex.position_of_vertex == target_position:
-                    #         target_match = vertex
-                    #         break
-                    # for vertex in pattern.adjacency_dictionary:
-                    #     if vertex.position_of_vertex == nx_mapping[target_position]:
-                    #         mole_vertex = vertices[vertex]
-                    #         break
                     isomorphic_mapping[target_match] = mole_vertex
                 if molecule in temporary_structure_dict[structure]:
                     # If the molecule vertices are different to the vertices currently in dictionary
                     # then there are multiple subgraphs in molecule isomorphic to pattern
-                    if Counter(isomorphic_mapping.values()) != Counter(temporary_structure_dict[structure][molecule].values()):
+                    if Counter(isomorphic_mapping.values()) != Counter(
+                            temporary_structure_dict[structure][molecule].values()):
                         self._add_structure_to_multiple_dictionary(structure, molecule, isomorphic_mapping)
                 else:
                     temporary_structure_dict[structure][molecule] = isomorphic_mapping
@@ -338,7 +333,7 @@ class CSAlgorithm(object):
             # is also stored into the multiple_structures dictionary so it includes all instances of the structure
             for key in mapping:
                 self.multiple_vertices[structure][molecule][key] = [self.path_structures[structure][molecule][key],
-                                                                      mapping[key]]
+                                                                    mapping[key]]
 
     def _add_structure_to_characteristic(self, structure):
         """
@@ -350,6 +345,7 @@ class CSAlgorithm(object):
         :param structure: the molecule object which is to be added to the characteristic substructure
         :return: None
         """
+        print 'decision'
         if structure in self.multiple_vertices:
             self._add_multiple_to_characteristic(structure)
         elif structure not in self.multiple_vertices:
@@ -384,29 +380,65 @@ class CSAlgorithm(object):
                 possible_location.vertex_to_graph(vertex)
                 possible_location.adjacency_dictionary[vertex] = copy(structure.adjacency_dictionary[vertex])
             return possible_location
-        # If the molecule does contain a subgraph which is isomorphic to the current CS
-        # then check if this subgraph shares any vertices or edges with the structure
-        considered = []
+
+        # There is a part of the characteristic substructure contained in the molecule
+        structure_mapping = self.path_structures[structure][molecule]
+        cs_mapping = self.cs_locations[molecule]
         for vertex in structure.adjacency_dictionary:
-            neighbours_copy = copy(structure.adjacency_dictionary[vertex])
-            for neighbour in structure.adjacency_dictionary[vertex]:
-                if neighbour in self.path_structures[structure][molecule]:
-                    if self.path_structures[structure][molecule][neighbour] in self.cs_locations[molecule]:
-                        cs_neighbour = self.cs_locations[molecule][self.path_structures[structure][molecule][neighbour]]
-                        neighbours_copy[cs_neighbour] = copy(structure.adjacency_dictionary[vertex][neighbour])
-                        del neighbours_copy[neighbour]
-            if self.path_structures[structure][molecule][vertex] in self.cs_locations[molecule]:
-                cs_vertex = self.cs_locations[molecule][self.path_structures[structure][molecule][vertex]]
-                possible_location.adjacency_dictionary[cs_vertex].update(neighbours_copy)
-            elif self.path_structures[structure][molecule][vertex] not in self.cs_locations[molecule]:
-                possible_location.vertex_to_graph(vertex)
-                possible_location.adjacency_dictionary[vertex] = neighbours_copy
-        print 'possibleses'
-        print possible_location.adjacency_dictionary
-        print possible_location.vertices()
-        print possible_location.adjacency_dictionary.keys()
-        for e in possible_location.edges():
-            print e.endpoints
+            # The vertex maps to a molecule vertex which is already represented in the characteristic substructure
+            if structure_mapping[vertex] in cs_mapping:
+                for neighbour in structure.adjacency_dictionary[vertex]:
+                    # The neighbouring vertex is also represented in the characteristic substructure
+                    # This means that the bond between them is already in the characteristic substructure
+                    if structure_mapping[neighbour] in cs_mapping:
+                        continue
+                    # The neighbouring vertex is not represented in characteristic substructure
+                    elif structure_mapping[neighbour] not in cs_mapping:
+                        # Neighbouring vertex is added if it has not been already
+                        if neighbour not in possible_location.adjacency_dictionary:
+                            possible_location.vertex_to_graph(neighbour)
+                        # A bond is added in graph that is of the same type as the original bond between the vertices
+                        current_bond = structure.adjacency_dictionary[vertex][neighbour]
+                        if current_bond.single:
+                            possible_location.add_single_bond(cs_mapping[structure_mapping[vertex]], neighbour)
+                        elif current_bond.double:
+                            possible_location.add_double_bond(cs_mapping[structure_mapping[vertex]], neighbour)
+                        elif current_bond.triple:
+                            possible_location.add_triple_bond(cs_mapping[structure_mapping[vertex]], neighbour)
+                        elif current_bond.quadruple:
+                            possible_location.add_quadruple_bond(cs_mapping[structure_mapping[vertex]], neighbour)
+                        elif current_bond.aromatic:
+                            possible_location.add_aromatic_bond(cs_mapping[structure_mapping[vertex]], neighbour)
+            # The vertex is not yet represented in the characteristic substructure
+            elif structure_mapping[vertex] not in cs_mapping:
+                if vertex not in possible_location.adjacency_dictionary:
+                    possible_location.vertex_to_graph(vertex)
+                for neighbour in structure.adjacency_dictionary[vertex]:
+                    # The neighbouring vertex is represented in the characteristic substructure
+                    if structure_mapping[neighbour] in cs_mapping:
+                        # Neighbouring vertex is added if it has not been already
+                        if neighbour not in possible_location.adjacency_dictionary:
+                            possible_location.vertex_to_graph(neighbour)
+                        # A bond is added in graph that is of the same type as the original bond between the vertices
+                        current_bond = structure.adjacency_dictionary[vertex][neighbour]
+                        if current_bond.single:
+                            possible_location.add_single_bond(vertex, cs_mapping[structure_mapping[neighbour]])
+                        elif current_bond.double:
+                            possible_location.add_double_bond(vertex, cs_mapping[structure_mapping[neighbour]])
+                        elif current_bond.triple:
+                            possible_location.add_triple_bond(vertex, cs_mapping[structure_mapping[neighbour]])
+                        elif current_bond.quadruple:
+                            possible_location.add_quadruple_bond(vertex, cs_mapping[structure_mapping[neighbour]])
+                        elif current_bond.aromatic:
+                            possible_location.add_aromatic_bond(vertex, cs_mapping[structure_mapping[neighbour]])
+                    # Both vertices are not represented in characteristic substructure so vertices and bond are added
+                    elif structure_mapping[neighbour] not in cs_mapping:
+                        if vertex not in possible_location.adjacency_dictionary:
+                            possible_location.vertex_to_graph(vertex)
+                        if neighbour not in possible_location.adjacency_dictionary:
+                            possible_location.vertex_to_graph(neighbour)
+                        possible_location.edge_to_graph(vertex, neighbour,
+                                                        structure.adjacency_dictionary[vertex][neighbour])
         return possible_location
 
     def _add_multiple_to_characteristic(self, structure):
@@ -416,9 +448,9 @@ class CSAlgorithm(object):
         :param structure: The structure which appears multiple times in the molecules and is to be added to CS
         :return: a list of graphs displaying the possible locations that the structure could have in the CS
         """
-        print 'multiple'
         if len(self.multiple_vertices[structure]) < (len(self.molecules) * self.isomorphism_factor):
             return []
+        print 'multiple'
         repeats = set()
         for molecule in self.multiple_vertices[structure]:
             # Finds the number of different molecules associated  with one of the structure vertices
@@ -484,8 +516,6 @@ class CSAlgorithm(object):
         print 'into frequent'
         isomorphic_locations = {}
         for possible in possible_locations:
-            print possible.positions
-            print possible.adjacency_dictionary.keys()
             for location in isomorphic_locations:
                 if self._nx_isomorphism(possible, location):
                     isomorphic_locations[location] += 1
@@ -503,7 +533,7 @@ class CSAlgorithm(object):
         :return: list of display strings
         """
         string_list = ['Characteristic Substructure\n',
-                       self._adjacency_dictionary_output(self.characteristic_substructure) + '\n',
+                       self.characteristic_substructure.adjacency_dictionary_display() + '\n',
                        'Structures which have been added to Characteristic Substructure\n']
         string_list.extend(self._structures_output(self.cs_structures))
         return string_list
@@ -520,7 +550,7 @@ class CSAlgorithm(object):
         counter = 0
         for structure in structures:
             string_list.append('Structure ' + str(counter) + '\n')
-            string_list.append(self._adjacency_dictionary_output(structure) + '\n')
+            string_list.append(structure.adjacency_dictionary_display() + '\n')
             counter += 1
         for molecule in self.molecules:
             string_list.append(str(molecule) + ': ')
@@ -532,21 +562,6 @@ class CSAlgorithm(object):
                     membership.append('0')
             string_list.append('(' + ''.join(membership) + ')' + '\n')
         return string_list
-
-    def _adjacency_dictionary_output(self, structure):
-        """
-        Creates a string format of the adjacency dictionary of the given structure
-
-        :param structure: molecule object which is the structure that is to be formatted
-        :return: string representation of the molecule
-        """
-        string_list = []
-        for vertex in structure.adjacency_dictionary:
-            string_list.append(str(vertex) + ':\n')
-            for neighbour in structure.neighbours(vertex):
-                string_list.append('        ' + str(neighbour) + ': ' + str(structure.adjacency_dictionary[vertex][neighbour]) + '\n')
-        display_string = ''.join(string_list)
-        return display_string
 
     def _data_input(self):
         """
@@ -613,6 +628,7 @@ def argument_input():
     if all_structures:
         print 'Representative Structures'
         print all_structures
+
 
 if __name__ == '__main__':
     argument_input()

@@ -309,3 +309,18 @@ class Graph(object):
         # Once the vertex has been processed it is popped from the stack to create the string and to store the vertices
         path_stack.pop()
         vertex_stack.pop()
+
+    def adjacency_dictionary_display(self):
+        """
+        Creates a string format of the adjacency dictionary of the given structure
+
+        :return: string representation of the adjacency dictionary
+        """
+        string_list = []
+        for vertex in self.adjacency_dictionary:
+            string_list.append(str(vertex) + ':\n')
+            for neighbour in self.neighbours(vertex):
+                string_list.append(
+                    '        ' + str(neighbour) + ': ' + str(self.adjacency_dictionary[vertex][neighbour]) + '\n')
+        display_string = ''.join(string_list)
+        return display_string
