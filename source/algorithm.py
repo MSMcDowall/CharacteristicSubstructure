@@ -386,6 +386,7 @@ class CSAlgorithm(object):
             return possible_location
         # If the molecule does contain a subgraph which is isomorphic to the current CS
         # then check if this subgraph shares any vertices or edges with the structure
+        considered = []
         for vertex in structure.adjacency_dictionary:
             neighbours_copy = copy(structure.adjacency_dictionary[vertex])
             for neighbour in structure.adjacency_dictionary[vertex]:
@@ -400,7 +401,10 @@ class CSAlgorithm(object):
             elif self.path_structures[structure][molecule][vertex] not in self.cs_locations[molecule]:
                 possible_location.vertex_to_graph(vertex)
                 possible_location.adjacency_dictionary[vertex] = neighbours_copy
+        print 'possibleses'
+        print possible_location.adjacency_dictionary
         print possible_location.vertices()
+        print possible_location.adjacency_dictionary.keys()
         for e in possible_location.edges():
             print e.endpoints
         return possible_location

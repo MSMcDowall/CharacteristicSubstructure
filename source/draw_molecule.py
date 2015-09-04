@@ -3,6 +3,11 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
+"""
+This drawing tool creates a depiction of the molecule or graph object entered.
+It is not currently used in the other areas of the application.
+"""
+
 def draw_molecule(molecule):
     # Create a new NetworkX graph
     g = nx.Graph()

@@ -13,7 +13,9 @@ Created by Mary McDowall as part of MSc IT degree.
     (called representative substructures). 
     
     The frequency threshold below sets the percentage of molecules that a subgraph must appear in for it be considered
-    representative. The default is set at 80% of the molecules. 
+    representative. The default is set at 80% of the molecules. If the thresehol is set lower then structures which 
+    appear in a lower number of molecules will be included in the characteristic substructure or in the list of 
+    representative structures.
     
 ##Input/Output
 
@@ -31,6 +33,26 @@ Created by Mary McDowall as part of MSc IT degree.
     and their results type and be located in the same directory as the input file.
     Example: FileName0.6_CharacteristicSubstructure.txt
           or FileName0.8_RepresentativeStructures.txt
+
+    The results in the CharacteristicSubstructure file will include( all graphs in adjacency dictionary format):
+
+        Characteristic substructure
+        1. Structure contained in characteristic substructure
+        2. Structure contained in characteristic substructure
+        ...
+        SMILES for input molecules  :   Membership array for structures in molecules 
+        
+    For the membership array if a 0 is present at position 2 then Structure 2 is not present in the molecule.
+    If a 1 is present then the structure can be found in the molecule. 
+    
+    The results in the RepresentativeStructures file will include( all graphs in adjacency dictionary format):
+
+        1. Representative structure
+        2. Representative structure
+        ...
+        SMILES for input molecules  :   Membership array for structures in molecules
+    
+    
     
 ##Dependencies
 
