@@ -317,10 +317,11 @@ class Graph(object):
         :return: string representation of the adjacency dictionary
         """
         string_list = []
-        for vertex in self.adjacency_dictionary:
-            string_list.append(str(vertex) + ':\n')
+        for vertex in self.positions:
+            string_list.append(str(vertex) + ' at position ' + str(self.position_of_vertex(vertex)) + ':\n')
             for neighbour in self.neighbours(vertex):
                 string_list.append(
-                    '        ' + str(neighbour) + ': ' + str(self.adjacency_dictionary[vertex][neighbour]) + '\n')
+                    '        ' + str(neighbour) + ' at position ' + str(self.position_of_vertex(neighbour)) + ': ' +
+                    str(self.adjacency_dictionary[vertex][neighbour]) + '\n')
         display_string = ''.join(string_list)
         return display_string

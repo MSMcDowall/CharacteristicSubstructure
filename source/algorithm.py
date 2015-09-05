@@ -7,6 +7,7 @@ import sys
 import argparse
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
+from datetime import datetime
 
 
 # Implementation of Finding Characteristic Substructures for Metabolite Classes
@@ -86,6 +87,7 @@ class CSAlgorithm(object):
         paths = self._find_graphs_paths(smiles_set)
         length = self.length_start
         while length >= self.length_end:
+            print length
             representative_paths = self._find_representative_paths(paths, length)
             sorted_dictionary = self._find_representative_structures(representative_paths)
             # After considering paths of this length test to see if there are representative substructures
@@ -591,6 +593,7 @@ def argument_input():
     The file name for the SMILES file is mandatory, the flags and threshold specification are optional
     :return: None
     """
+    a = datetime.now()
     parser = argparse.ArgumentParser(description="compare the structure of molecules in a SMILES file")
     parser.add_argument("smiles_file", help="a file containing SMILES strings")
     parser.add_argument("threshold", nargs='?', default=0.8, type=float,
@@ -613,14 +616,16 @@ def argument_input():
     if not args.characteristic and not args.representative:
         c_structure = cs.find_characteristic_substructure()
         all_structures = cs.find_all_representative_structures()
-
+    b = datetime.now()
     # Display the structures in the command line
     if c_structure:
         print 'Characteristic Substructure'
-        print c_structure.adjacency_dictionary.keys()
+        print c_structure.adjacency_dictionary_display()
     if all_structures:
         print 'Representative Structures'
         print all_structures
+    c = b-a
+    print c.total_seconds()
 
 
 if __name__ == '__main__':
