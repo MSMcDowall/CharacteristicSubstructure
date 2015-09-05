@@ -1,6 +1,6 @@
 # coding=utf-8
-from smiles_parser import Parser
-import molecule as m
+from .smiles_parser import Parser
+from .molecule import Molecule, Bond
 from collections import OrderedDict, Counter
 from copy import copy
 import sys
@@ -25,7 +25,7 @@ class CSAlgorithm(object):
         self.isomorphism_factor = 0.8
 
         # The structure which has been created through the combination of representative path structures
-        self.characteristic_substructure = m.Molecule('Characteristic Substructure')
+        self.characteristic_substructure = Molecule('Characteristic Substructure')
         # List holding structures which have been added to the characteristic substructure
         self.cs_structures = []
         # Dictionary holding the locations of the molecules which map to the characteristic substructure
@@ -39,9 +39,6 @@ class CSAlgorithm(object):
         # Dictionary of structures that appear multiple times in molecules and list of molecule vertices that map them
         # {single structure: {molecule: {structure vertex: [molecule vertices]}}}
         self.multiple_vertices = {}
-        # Dictionary of structures which are composed of instances of other path structures, maps to molecule vertices
-        # {multiple structure: {molecule: {structure vertex: molecule vertex}}}
-        self.multiple_structures = {}
         # NetworkX graph version of the path structure, path structure is key
         self.structure_nx = {}
 
@@ -171,7 +168,7 @@ class CSAlgorithm(object):
         :return: a tuple of the newly created path structure and
                 a dictionary mapping the structures vertices to the molecule vertices
         """
-        structure = m.Molecule(path)
+        structure = Molecule(path)
         # Uses the original vertices as keys, structure vertices as values, used to create the edges
         old_molecule_map = {}
         # Uses structure vertices as keys, original vertices as values,
@@ -190,7 +187,7 @@ class CSAlgorithm(object):
             for neighbour in vertices:
                 # Test if there is an edge to any of the other atoms in the path
                 edge = molecule.contains_edge(atom, neighbour)
-                if isinstance(edge, m.Bond):
+                if isinstance(edge, Bond):
                     if edge.single:
                         structure.add_single_bond(old_molecule_map[atom], old_molecule_map[neighbour])
                     elif edge.double:
@@ -286,7 +283,7 @@ class CSAlgorithm(object):
         for n in structure.vertices():
             g.add_node(structure.position_of_vertex(n), element=n.element)
         for e in structure.edges():
-            if isinstance(e, m.Bond):
+            if isinstance(e, Bond):
                 if e.single:
                     g.add_edge(structure.endpoints_position(e)[0], structure.endpoints_position(e)[1], type='single')
                 elif e.double:
@@ -360,7 +357,7 @@ class CSAlgorithm(object):
         :return: list of graphs which display the different locations where the structure could be added to CS
         """
         # Create a copy of the characteristic substructure which will have the structure added to it
-        possible_location = m.Molecule(str(self.characteristic_substructure))
+        possible_location = Molecule(str(self.characteristic_substructure))
         for vertex in self.characteristic_substructure.adjacency_dictionary:
             possible_location.vertex_to_graph(vertex)
             for neighbour in self.characteristic_substructure.adjacency_dictionary[vertex]:

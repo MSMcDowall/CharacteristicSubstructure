@@ -1,11 +1,10 @@
-import graph
-from collections import deque
+from .graph import Vertex, Edge, Graph
 
 
 # Represents an atom within the molecule, includes the atoms chemical properties
-class Atom(graph.Vertex):
+class Atom(Vertex):
     def __init__(self, element, isotope=None, hydrogen=None, charge=None, aromatic=False):
-        graph.Vertex.__init__(self, element)
+        Vertex.__init__(self, element)
         self.isotope = isotope
         self.hydrogen = hydrogen
         self.charge = charge
@@ -25,9 +24,9 @@ class Atom(graph.Vertex):
             return '<Atom %s at %s>' % (self.element, id(self))
 
 
-class Bond(graph.Edge):
+class Bond(Edge):
     def __init__(self, origin, destination, single=False, double=False, triple=False, quadruple=False, aromatic=False):
-        graph.Edge.__init__(self, origin, destination)
+        Edge.__init__(self, origin, destination)
         self.single = single
         self.double = double
         self.triple = triple
@@ -59,9 +58,9 @@ class Bond(graph.Edge):
             return '<Aromatic Bond at %s>' % id(self)
 
 
-class Molecule(graph.Graph):
+class Molecule(Graph):
     def __init__(self, smiles):
-        graph.Graph.__init__(self)
+        Graph.__init__(self)
         self._smiles_string = smiles
 
     # Return the original SMILES string
@@ -73,37 +72,37 @@ class Molecule(graph.Graph):
 
     def add_atom(self, element, isotope=None, hydrogen=None, charge=None):
         new_atom = Atom(element, isotope, hydrogen, charge)
-        graph.Graph.vertex_to_graph(self, new_atom)
+        Graph.vertex_to_graph(self, new_atom)
         return new_atom
 
     def add_aromatic_atom(self, element, isotope=None, hydrogen=None, charge=None):
         new_aromatic_atom = Atom(element, isotope, hydrogen, charge, aromatic=True)
-        graph.Graph.vertex_to_graph(self, new_aromatic_atom)
+        Graph.vertex_to_graph(self, new_aromatic_atom)
         return new_aromatic_atom
 
     def add_single_bond(self, origin, destination):
         new_single = Bond(origin, destination, single=True)
-        graph.Graph.edge_to_graph(self, origin, destination, new_single)
+        Graph.edge_to_graph(self, origin, destination, new_single)
         return new_single
 
     def add_double_bond(self, origin, destination):
         new_double = Bond(origin, destination, double=True)
-        graph.Graph.edge_to_graph(self, origin, destination, new_double)
+        Graph.edge_to_graph(self, origin, destination, new_double)
         return new_double
 
     def add_triple_bond(self, origin, destination):
         new_triple = Bond(origin, destination, triple=True)
-        graph.Graph.edge_to_graph(self, origin, destination, new_triple)
+        Graph.edge_to_graph(self, origin, destination, new_triple)
         return new_triple
 
     def add_quadruple_bond(self, origin, destination):
         new_quadruple = Bond(origin, destination, quadruple=True)
-        graph.Graph.edge_to_graph(self, origin, destination, new_quadruple)
+        Graph.edge_to_graph(self, origin, destination, new_quadruple)
         return new_quadruple
 
     def add_aromatic_bond(self, origin, destination):
         new_aromatic_bond = Bond(origin, destination, aromatic=True)
-        graph.Graph.edge_to_graph(self, origin, destination, new_aromatic_bond)
+        Graph.edge_to_graph(self, origin, destination, new_aromatic_bond)
         return new_aromatic_bond
 
 

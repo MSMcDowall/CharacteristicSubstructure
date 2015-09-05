@@ -1,4 +1,4 @@
-from ...source import algorithm
+from ...characteristic_substructure import algorithm
 import unittest
 import os
 
@@ -17,6 +17,6 @@ class AlgorithmFeatureTestCase(unittest.TestCase):
         pass
 
     def test_result_from_empty_file(self):
-        print os.path.relpath("test/test_data/EmptyFile.txt", "source")
-        self.tester.smiles_file = os.path.relpath("test", "source")
+        print os.path.relpath("test/test_data/EmptyFile.txt", "characteristic_substructure")
+        self.tester.smiles_file = os.path.relpath("test", "characteristic_substructure")
         pass

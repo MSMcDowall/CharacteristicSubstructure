@@ -1,11 +1,12 @@
-import smiles_parser
+from .smiles_parser import Parser
 import networkx as nx
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 """
 This drawing tool creates a depiction of the molecule or graph object entered.
 It is not currently used in the other areas of the application.
+Requires: matplotlib==1.4.2
 """
 
 def draw_molecule(molecule):
@@ -40,5 +41,5 @@ def draw_molecule(molecule):
     return g
 
 if __name__ == '__main__':
-    m = smiles_parser.Parser().parse_smiles('ClBrCB')
+    m = Parser().parse_smiles('ClBrCB')
     graph = draw_molecule(m)

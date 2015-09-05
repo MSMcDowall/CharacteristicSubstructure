@@ -1,5 +1,5 @@
 import re
-from molecule import Molecule
+from .molecule import Molecule
 
 
 class Parser(object):

@@ -1,4 +1,4 @@
-from ...source.smiles_parser import Parser
+from ...characteristic_substructure.smiles_parser import Parser
 import unittest
 
 

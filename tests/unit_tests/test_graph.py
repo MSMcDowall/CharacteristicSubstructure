@@ -1,4 +1,4 @@
-from ...source import graph
+from ...characteristic_substructure import graph
 import unittest
 
 

@@ -1,6 +1,3 @@
-from copy import copy
-#from draw_molecule import draw_molecule as draw
-
 """
 This module contains a graph implemented with an adjacency dictionary
 and the edge and vertex objects which can be added to the graph.

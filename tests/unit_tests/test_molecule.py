@@ -1,4 +1,4 @@
-from ...source import molecule
+from ...characteristic_substructure import molecule
 import unittest
 
 

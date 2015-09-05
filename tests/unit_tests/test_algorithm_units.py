@@ -1,4 +1,4 @@
-from ...source import algorithm
+from ...characteristic_substructure import algorithm
 import unittest
 
 class AlgorithmUnitTestCase(unittest.TestCase):
