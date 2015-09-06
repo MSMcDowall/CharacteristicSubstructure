@@ -128,7 +128,6 @@ class Graph(object):
         self.vertex_to_graph(new_vertex)
         return new_vertex
 
-    # TODO try for key error
     def vertex_to_graph(self, vertex):
         """
         Adds a vertex object to the graph by assigning a dictionary which will contain all adjacent vertices and edges.
@@ -141,7 +140,6 @@ class Graph(object):
         self.positions.append(vertex)
         self.size += 1
 
-    # TODO try for key error
     def remove_vertex(self, vertex):
         """
         Delete the vertex object from the graph by removing it from the dictionaries of vertices which are adjacent.

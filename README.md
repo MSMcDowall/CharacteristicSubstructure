@@ -25,9 +25,9 @@ Created by Mary McDowall as part of MSc IT degree.
     If the user only wants the representative substructures then the "-r" flag can be used.
     If the user wishes to view the command line argument help statements then the "-h" flag can be used.
     If the user wishes to alter the frequency threshold then enter the new threshold as a decimal after the file name.
-    Example: python source\algorithm.py -c data\folder\FileName.txt 0.6
-          or python source\algorithm.py -r data\folder\FileName.txt
-          or python source\algorithm.py -h
+    Example: python source\characteristic_substructure.py -c data\folder\FileName.txt 0.6
+          or python source\characteristic_substructure.py -r data\folder\FileName.txt
+          or python source\characteristic_substructure.py -h
 
 ##Output
 
@@ -59,11 +59,16 @@ Created by Mary McDowall as part of MSc IT degree.
 ##Dependencies
 
     NetworkX is required to run the algorithm.py file as it provides the subgraph isomorphism algorithm
-    MatplotLib is required if the user wishes to draw the molecule though it is not required to run the algorithm.py
+    MatplotLib is required if the user wishes to draw the molecule though this feature is not currently integrated into
+    the rest of the applcation
+    PubChemPy is required to run the pubchem_retrieval module
     
 ##Contents 
 
 ###source Folder:
+
+    characteristic_substructure.py provides the entry point for the applcation including the main method and the file
+    input and output methods
 
     algorithm.py contains an implementation of the method set down in 'Finding Characteristic Substructures for 
     Metabolite Classes' by Marcus Ludwig et al. German Conference on Bioinformatics 2012
@@ -76,10 +81,12 @@ Created by Mary McDowall as part of MSc IT degree.
     
     draw_molecule.py uses the NetworkX package and Matplotlib to draw the molecules including vertex and edge labels
     
+    pubchem_retrieval.py uses the PubChemPy wrapper to retrieve the smiles files from a set of molecule CID 
+    
 ###tests Folder:
 
     Unit Tests:
-        unit tests on the graph.py and molecule.py files as well as the basic functions in algorithm.py
+        unit tests on the graph.py and molecule.py files
         
     Feature Tests:
         feature tests that ensure smiles_parser.py and algorithm.py produce the correct results

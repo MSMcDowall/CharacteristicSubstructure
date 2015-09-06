@@ -3,11 +3,8 @@ from smiles_parser import Parser
 import molecule as m
 from collections import OrderedDict, Counter
 from copy import copy
-import sys
-import argparse
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
-from datetime import datetime
 
 
 # Implementation of Finding Characteristic Substructures for Metabolite Classes
@@ -15,9 +12,7 @@ from datetime import datetime
 
 
 class CSAlgorithm(object):
-    def __init__(self, smiles_file, length_start=20, length_end=5, threshold=0.8):
-        # The file containing the SMILES strings
-        self.smiles_file = smiles_file
+    def __init__(self, length_start=20, length_end=5, threshold=0.8):
         # The initial parameters for the algorithm
         self.length_start = length_start
         self.length_end = length_end
@@ -27,6 +22,8 @@ class CSAlgorithm(object):
 
         # The structure which has been created through the combination of representative path structures
         self.characteristic_substructure = m.Molecule('Characteristic Substructure')
+        # Indicate if the characteristic substructure contains a path structure yet
+        self.cs_begun = False
         # List holding structures which have been added to the characteristic substructure
         self.cs_structures = []
         # Dictionary holding the locations of the molecules which map to the characteristic substructure
@@ -40,13 +37,10 @@ class CSAlgorithm(object):
         # Dictionary of structures that appear multiple times in molecules and list of molecule vertices that map them
         # {single structure: {molecule: {structure vertex: [molecule vertices]}}}
         self.multiple_vertices = {}
-        # Dictionary of structures which are composed of instances of other path structures, maps to molecule vertices
-        # {multiple structure: {molecule: {structure vertex: molecule vertex}}}
-        self.multiple_structures = {}
         # NetworkX graph version of the path structure, path structure is key
         self.structure_nx = {}
 
-    def find_characteristic_substructure(self):
+    def find_characteristic_substructure(self, paths):
         """
         Find the characteristic substructure for a set of molecules
 
@@ -57,8 +51,7 @@ class CSAlgorithm(object):
 
         :return: a molecule object that is the characteristic substructure of the list of molecules
         """
-        smiles_set = self._data_input()
-        paths = self._find_graphs_paths(smiles_set)
+        print 'Finding characteristic substructure'
         length = self.length_start
         while length >= self.length_end:
             print length
@@ -66,25 +59,22 @@ class CSAlgorithm(object):
             sorted_dictionary = self._find_representative_structures(representative_paths)
             # After considering paths of this length test to see if there are representative substructures
             # If there are no rep structures then decrease stepwise, if there is increase the step size
-            if sorted_dictionary:
-                for structure in sorted_dictionary.keys():
-                    self._add_structure_to_characteristic(structure)
+            for structure in sorted_dictionary.keys():
+                self._add_structure_to_characteristic(structure)
+            if self.cs_begun:
                 length -= self.step
             else:
                 length -= 1
-        self._data_output(self._create_cs_results(), self.smiles_file[:-4] + str(self.threshold) +
-                          '_CharacteristicSubstructure.txt')
         return self.characteristic_substructure
 
-    def find_all_representative_structures(self):
+    def find_all_representative_structures(self, paths):
         """
         Creates a list of all the structure of different lengths which are representative sorted in terms of frequency
 
         :return: list of structures which appear frequently in molecules
         """
+        print 'Finding all representative structures'
         all_structures = {}
-        smiles_set = self._data_input()
-        paths = self._find_graphs_paths(smiles_set)
         length = self.length_start
         while length >= self.length_end:
             print length
@@ -97,11 +87,9 @@ class CSAlgorithm(object):
             # To get the structures of all lengths the step does not alter
             length -= 1
         representative_structures = OrderedDict(sorted(all_structures.items(), key=lambda x: x[1], reverse=True)).keys()
-        self._data_output(self._structures_output(representative_structures),
-                          self.smiles_file[:-4] + str(self.threshold) + '_RepresentativeStructures.txt')
         return representative_structures
 
-    def _find_graphs_paths(self, smiles_set):
+    def find_graphs_paths(self, smiles_set):
         """
         For each SMILES string a molecule object is created and all of its paths found
         
@@ -229,10 +217,8 @@ class CSAlgorithm(object):
                 # Maps the vertices from the pattern to the target
                 isomorphic_mapping = {}
                 for target_position in nx_mapping:
-                    if structure.vertex_from_position(target_position):
-                        target_match = structure.vertex_from_position(target_position)
-                    if pattern.vertex_from_position(nx_mapping[target_position]):
-                        pattern_match = pattern.vertex_from_position(nx_mapping[target_position])
+                    target_match = structure.vertex_from_position(target_position)
+                    pattern_match = pattern.vertex_from_position(nx_mapping[target_position])
                     mole_vertex = vertices[pattern_match]
                     isomorphic_mapping[target_match] = mole_vertex
                 if molecule in temporary_structure_dict[structure]:
@@ -351,6 +337,7 @@ class CSAlgorithm(object):
                 possible_locations.append(possible)
             self.characteristic_substructure = self._most_frequent_location(possible_locations)
             self._add_cs_locations(structure)
+            self.cs_begun = True
 
     def _add_single_to_characteristic(self, structure, molecule):
         """
@@ -445,7 +432,7 @@ class CSAlgorithm(object):
         :return: a list of graphs displaying the possible locations that the structure could have in the CS
         """
         if len(self.multiple_vertices[structure]) < (len(self.molecules) * self.isomorphism_factor):
-            return []
+            return
         print 'multiple'
         repeats = set()
         for molecule in self.multiple_vertices[structure]:
@@ -484,6 +471,7 @@ class CSAlgorithm(object):
             chosen_location = self._most_frequent_location(possible_locations.keys())
             self.characteristic_substructure = chosen_location
             self._add_cs_locations(possible_locations[chosen_location])
+            self.cs_begun = True
 
     def _add_cs_locations(self, structure):
         """
@@ -519,7 +507,7 @@ class CSAlgorithm(object):
                 isomorphic_locations[possible] = 1
         return OrderedDict(sorted(isomorphic_locations.items(), key=lambda x: x[1], reverse=True)).keys()[0]
 
-    def _create_cs_results(self):
+    def create_cs_results(self):
         """
         Creates the strings which will be used in the results output after calling find_characteristic_substructure.
 
@@ -530,10 +518,10 @@ class CSAlgorithm(object):
         string_list = ['Characteristic Substructure\n',
                        self.characteristic_substructure.adjacency_dictionary_display() + '\n',
                        'Structures which have been added to Characteristic Substructure\n']
-        string_list.extend(self._structures_output(self.cs_structures))
+        string_list.extend(self.structures_output(self.cs_structures))
         return string_list
 
-    def _structures_output(self, structures):
+    def structures_output(self, structures):
         """
         Creates the strings which will be used in the results output after calling find_all_representative_structures
 
@@ -558,75 +546,3 @@ class CSAlgorithm(object):
             string_list.append('(' + ''.join(membership) + ')' + '\n')
         return string_list
 
-    def _data_input(self):
-        """
-        Takes in a txt file, reads each line and stores the result in a list
-
-        :return: a list of each of the lines of the text file
-        """
-        smiles_set = []
-        reader = open(self.smiles_file, mode='rb')
-        for line in reader:
-            words = line.split(" ")
-            smiles_set.append(words[0])
-        reader.close()
-        return smiles_set
-
-    def _data_output(self, string_list, file_name):
-        """
-        Writes a list of strings to a file with the given filename
-
-        :param string_list: list of display strings
-        :return: None
-        """
-        display_string = ''.join(string_list)
-        writer = open(file_name, mode='wb')
-        writer.write(display_string)
-        writer.close()
-
-
-def argument_input():
-    """
-    Creates the algorithm object with the correct parameters and calls methods based on the command line arguments.
-
-    Uses the argparse module to parse the command line arguments that are given
-    The file name for the SMILES file is mandatory, the flags and threshold specification are optional
-    :return: None
-    """
-    a = datetime.now()
-    parser = argparse.ArgumentParser(description="compare the structure of molecules in a SMILES file")
-    parser.add_argument("smiles_file", help="a file containing SMILES strings")
-    parser.add_argument("threshold", nargs='?', default=0.8, type=float,
-                        help="the relative frequency of structures in the molecules")
-    parser.add_argument("-c", "--characteristic", action="store_true",
-                        help="display the characteristic substructure only")
-    parser.add_argument("-r", "--representative", action="store_true",
-                        help="display all of the representative substructures")
-    args = parser.parse_args()
-    cs = CSAlgorithm(smiles_file=args.smiles_file)
-    if args.threshold:
-        cs.threshold = args.threshold
-
-    c_structure = None
-    all_structures = None
-    if args.characteristic:
-        c_structure = cs.find_characteristic_substructure()
-    if args.representative:
-        all_structures = cs.find_all_representative_structures()
-    if not args.characteristic and not args.representative:
-        c_structure = cs.find_characteristic_substructure()
-        all_structures = cs.find_all_representative_structures()
-    b = datetime.now()
-    # Display the structures in the command line
-    if c_structure:
-        print 'Characteristic Substructure'
-        print c_structure.adjacency_dictionary_display()
-    if all_structures:
-        print 'Representative Structures'
-        print all_structures
-    c = b-a
-    print c.total_seconds()
-
-
-if __name__ == '__main__':
-    argument_input()
