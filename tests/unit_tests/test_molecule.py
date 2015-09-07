@@ -5,12 +5,12 @@ import unittest
 class AtomTestCase(unittest.TestCase):
     def test_atom_creation(self):
         self.a = molecule.Atom('C', hydrogen=2)
-        self.assertEqual(self.a.element, 'C')       # Test for access to base class methods
+        self.assertEqual(self.a.label, 'C')       # Test for access to base class methods
         self.assertEqual(self.a.hydrogen, 2)
 
     def test_aromatic_atom_creation(self):
         self.a = molecule.Atom('c', 12, aromatic=True)
-        self.assertEqual(self.a.element, 'c')
+        self.assertEqual(self.a.label, 'c')
         self.assertEqual(self.a.isotope, 12)
 
 
@@ -56,11 +56,11 @@ class MoleculeTestCase(unittest.TestCase):
         self.assertEqual(self.mole.size, 2)     # Test for access to base class methods
 
     def test_add_atom(self):
-        self.assertEqual(self.mole.vertices()[0].element, 'C')
+        self.assertEqual(self.mole.vertices()[0].label, 'C')
 
     def test_add_aromatic_atom(self):
         self.mole.add_aromatic_atom('c')
-        self.assertEqual(self.mole.vertices()[2].element, 'c')
+        self.assertEqual(self.mole.vertices()[2].label, 'c')
 
     def test_add_single_bond(self):
         self.e = self.mole.add_single_bond(self.x, self.y)

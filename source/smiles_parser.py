@@ -143,7 +143,7 @@ class Parser(object):
         """
         Adds a bond to the molecule and if a bond symbol has been encountered it tests the type
 
-        :param token: the token from the regular expression
+        :param atom: the atom which is to be joined with previous atom
         :param molecule: the molecule object which is being created
         :return: None
         """
@@ -171,7 +171,7 @@ class Parser(object):
         """
         Tests if a single or an aromatic bond should be added to an aromatic atom
 
-        :param token: the token from the regular expression
+        :param atom: the atom which is to be joined with previous atom
         :param molecule: the molecule object which is being created
         :return: None
         """

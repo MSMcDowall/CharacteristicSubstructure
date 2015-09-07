@@ -11,16 +11,16 @@ by  Michael T. Goodrich, Roberto Tamassia, Michael H. Goldwasser
 
 class Vertex(object):
     """
-    A single vertex of a graph which includes its element.
+    A single vertex of a graph which includes its label.
 
     The vertex does not hold information about its connections; this information is stored in the graph
-    :param element: a string which is the element of the vertex
+    :param label: a string which is the label of the vertex
     position: an integer which is used to signify the order in which the vertex was added to the graph
             it can be used as a simple unique identifier for the vertex within the graph
     visited: a boolean flag which is used in the find_all_paths method of a graph
     """
-    def __init__(self, element):
-        self.element = element
+    def __init__(self, label):
+        self.label = label
         self.visited = False
 
     def __hash__(self):
@@ -29,16 +29,16 @@ class Vertex(object):
 
 class Edge(object):
     """
-    A single Edge of a Graph which includes the two vertices that it connects and its element.
+    A single Edge of a Graph which includes the two vertices that it connects and its label.
 
     :param origin: one of the vertex objects which the edge connects
     :param destination: the other vertex which the edge connects
-    :param element: a string which is the element of the edge
+    :param label: a string which is the label of the edge
     """
-    def __init__(self, origin, destination, element=None):
+    def __init__(self, origin, destination, label=None):
         self._origin = origin
         self._destination = destination
-        self.element = element
+        self.label = label
 
     @property
     def endpoints(self):
@@ -116,15 +116,15 @@ class Graph(object):
         self.paths = []
         self.positions = []
 
-    def add_vertex(self, element):
+    def add_vertex(self, label):
         """
         Creates a new vertex object and adds it to the graph using the vertex_to_graph method.
 
         Performance: O(1)
-        :param element: a string representing the element of the vertex
+        :param label: a string representing the label of the vertex
         :return: the vertex object which has been newly created
         """
-        new_vertex = Vertex(element)
+        new_vertex = Vertex(label)
         self.vertex_to_graph(new_vertex)
         return new_vertex
 
@@ -153,17 +153,17 @@ class Graph(object):
         del self.adjacency_dictionary[vertex]
         self.positions.remove(vertex)
 
-    def add_edge(self, first_vertex, second_vertex, element=None):
+    def add_edge(self, first_vertex, second_vertex, label=None):
         """
         Create an edge object and add it to the graph using the edge_to_graph method.
 
         Performance: O(1)
         :param first_vertex: a vertex object that is to be an endpoint of the edge
         :param second_vertex: a vertex object that is to be an endpoint of the edge
-        :param element: the element of the edge object
+        :param label: the label of the edge object
         :return: the edge object which has been newly added to the graph
         """
-        new_edge = Edge(first_vertex, second_vertex, element)
+        new_edge = Edge(first_vertex, second_vertex, label)
         self.edge_to_graph(first_vertex, second_vertex, new_edge)
         return new_edge
 
@@ -284,7 +284,7 @@ class Graph(object):
 
     def _path_visit(self, v, path_stack, vertex_stack, all_paths):
         """
-        The recursive element of the find_all_paths method.
+        The recursive label of the find_all_paths method.
         As each new path is found the string representing it is created using the path_stack.
         The vertices which are present in the path are stored along with the path as a tuple in self.paths
         :param v: the vertex object which is to be added to the path
@@ -294,7 +294,7 @@ class Graph(object):
         :return: None
         """
         v.visited = True
-        path_stack.append(v.element + '-')
+        path_stack.append(v.label + '-')
         vertex_stack.append(v)
         for w in self.adjacency_dictionary[v]:
             if not w.visited:

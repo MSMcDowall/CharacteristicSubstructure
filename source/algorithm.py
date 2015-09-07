@@ -61,6 +61,7 @@ class CSAlgorithm(object):
             # If there are no rep structures then decrease stepwise, if there is increase the step size
             for structure in sorted_dictionary.keys():
                 self._add_structure_to_characteristic(structure)
+            # The step size only increases if the characteristic substructure has been started
             if self.cs_begun:
                 length -= self.step
             else:
@@ -99,7 +100,6 @@ class CSAlgorithm(object):
         paths = {}
         for smiles in smiles_set:
             molecule = Parser().parse_smiles(smiles)
-            # draw(molecule)
             self.molecules.append(molecule)
             path_dict = molecule.find_all_paths()
             paths.update(path_dict)
@@ -169,11 +169,11 @@ class CSAlgorithm(object):
         new_molecule_map = {}
         for atom in vertices:
             if not atom.aromatic:
-                new_atom = structure.add_atom(atom.element)
+                new_atom = structure.add_atom(atom.label)
                 old_molecule_map[atom] = new_atom
                 new_molecule_map[new_atom] = atom
             elif atom.aromatic:
-                new_atom = structure.add_aromatic_atom(atom.element)
+                new_atom = structure.add_aromatic_atom(atom.label)
                 old_molecule_map[atom] = new_atom
                 new_molecule_map[new_atom] = atom
         for atom in vertices:
@@ -203,7 +203,7 @@ class CSAlgorithm(object):
         :return: the graph object which has been newly added or updated
         """
         unique_structure = None
-        # A copy of path_structures is made so that it can be altered while also looping over the element
+        # A copy of path_structures is made so that it can be altered while also looping over the label
         temporary_structure_dict = self.path_structures.copy()
         for structure in self.path_structures:
             nx_mapping = self._nx_isomorphism(pattern, structure)
@@ -254,9 +254,9 @@ class CSAlgorithm(object):
         if not nx.faster_could_be_isomorphic(self.structure_nx[pattern], self.structure_nx[target]):
             # Graphs are definitely not isomorphic
             return None
-        # Ensures the isomorphism considers the vertex element and edge type
+        # Ensures the isomorphism considers the vertex label and edge type
         matcher = iso.GraphMatcher(self.structure_nx[pattern], self.structure_nx[target],
-                                   node_match=iso.categorical_node_match('element', 'C'),
+                                   node_match=iso.categorical_node_match('label', 'C'),
                                    edge_match=iso.categorical_edge_match('type', 'single'))
         if matcher.is_isomorphic():
             return matcher.mapping
@@ -272,7 +272,7 @@ class CSAlgorithm(object):
         g = nx.Graph()
         # For each vertex and edge in molecule graph add node and edge in NetworkX graph
         for n in structure.vertices():
-            g.add_node(structure.position_of_vertex(n), element=n.element)
+            g.add_node(structure.position_of_vertex(n), label=n.label)
         for e in structure.edges():
             if isinstance(e, m.Bond):
                 if e.single:
@@ -286,6 +286,7 @@ class CSAlgorithm(object):
                 elif e.aromatic:
                     g.add_edge(structure.endpoints_position(e)[0], structure.endpoints_position(e)[1], type='aromatic')
         self.structure_nx[structure] = g
+        return g
 
     def _add_structure_to_multiple_dictionary(self, structure, molecule, mapping):
         """

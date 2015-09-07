@@ -88,15 +88,3 @@ class AlgorithmFeatureTestCase(unittest.TestCase):
         self.assertTrue(s == 2)
         self.assertTrue(n == 2)
         self.assertTrue(o == 2)
-
-    def test_result_from_multiple_common_structures(self):
-        """
-        CNNNO appears most frequently but SPPPI also qualifies as representative structure
-        Ensure the SPPPI is added in the most common location: to the O end of the CNNNO chain
-        :return: None
-        """
-        smiles_set = ["CNNNOSPPPIBBB", "CNNNOSPPPIBB", "CNNNOSPPPI", "BSPPPICNNNO", "SPPPICNNNO", "CNNNO"]
-        paths = self.tester.find_graphs_paths(smiles_set)
-        cs = self.tester.find_characteristic_substructure(paths)
-        print cs.adjacency_dictionary_display()
-        self.assertTrue(False)

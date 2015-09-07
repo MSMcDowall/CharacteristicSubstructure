@@ -13,7 +13,7 @@ def draw_molecule(molecule):
     g = nx.Graph()
     # For each vertex and edge in molecule graph add node and edge in NetworkX graph
     for n in molecule.vertices():
-        g.add_node(molecule.position_of_vertex(n), element=n.element)
+        g.add_node(molecule.position_of_vertex(n), element=n.label)
     for e in molecule.edges():
         if e.single:
             g.add_edge(molecule.endpoints_position(e)[0], molecule.endpoints_position(e)[1], type='single')

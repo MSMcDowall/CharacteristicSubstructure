@@ -7,7 +7,7 @@ class VertexTestCase(unittest.TestCase):
         self.x = graph.Vertex('C')
 
     def test_vertex_creation(self):
-        self.assertEqual(self.x.element, 'C')
+        self.assertEqual(self.x.label, 'C')
 
 
 class EdgeTestCase(unittest.TestCase):
@@ -17,7 +17,7 @@ class EdgeTestCase(unittest.TestCase):
         self.e = graph.Edge(self.x, self.y, 1)
 
     def test_edge_creation(self):
-        self.assertEqual(self.e.element, 1)
+        self.assertEqual(self.e.label, 1)
 
     def test_endpoints(self):
         self.assertEqual(self.e.endpoints, (self.x, self.y))
@@ -38,18 +38,18 @@ class GraphTestCase(unittest.TestCase):
         self.assertEqual(self.g.vertices(), [])
 
     def test_add_vertex(self):
-        self.assertEqual(self.y.element, 'N')
+        self.assertEqual(self.y.label, 'N')
 
     def test_remove_vertex(self):
-        self.assertEqual(self.g.vertices()[0].element, 'C')
+        self.assertEqual(self.g.vertices()[0].label, 'C')
         self.g.remove_vertex(self.x)
-        self.assertEqual(self.g.vertices()[0].element, 'N')
+        self.assertEqual(self.g.vertices()[0].label, 'N')
 
     def test_add_edge(self):
-        self.assertEqual(self.e.element, 2)
+        self.assertEqual(self.e.label, 2)
 
     def test_remove_edge(self):
-        self.assertEqual(self.g.adjacency_dictionary[self.x][self.y].element, 2)
+        self.assertEqual(self.g.adjacency_dictionary[self.x][self.y].label, 2)
         self.g.remove_edge(self.x, self.y)
         self.assertEqual(self.g.adjacency_dictionary[self.x], {})
 
