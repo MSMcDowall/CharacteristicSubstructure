@@ -1,6 +1,5 @@
 from ...source import algorithm
 import unittest
-import os
 
 
 class AlgorithmFeatureTestCase(unittest.TestCase):
@@ -72,18 +71,18 @@ class AlgorithmFeatureTestCase(unittest.TestCase):
         n = 0
         o = 0
         for vertex in cs.adjacency_dictionary:
-            if vertex.element == 'S':
+            if vertex.label == 'S':
                 s += 1
                 neighbour = cs.adjacency_dictionary[vertex].keys()[0]
-                self.assertTrue(neighbour.element == 'N')
+                self.assertTrue(neighbour.label == 'N')
                 self.assertTrue(len(cs.adjacency_dictionary[vertex]) == 1)
-            elif vertex.element == 'N':
+            elif vertex.label == 'N':
                 n += 1
                 self.assertTrue(len(cs.adjacency_dictionary[vertex]) == 2)
-            elif vertex.element == 'O':
+            elif vertex.label == 'O':
                 o += 1
                 neighbour = cs.adjacency_dictionary[vertex].keys()[0]
-                self.assertTrue(neighbour.element == 'N')
+                self.assertTrue(neighbour.label == 'N')
                 self.assertTrue(len(cs.adjacency_dictionary[vertex]) == 1)
         self.assertTrue(s == 2)
         self.assertTrue(n == 2)
